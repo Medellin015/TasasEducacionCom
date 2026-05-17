@@ -402,18 +402,18 @@
     .ac-desc{font-size:12.5px}
   }
 
-  /* Delta badges (tarjetas home y KPIs) */
-  .tc-delta{
-    display:inline-block;font-size:11px;font-weight:700;
-    padding:3px 8px;border-radius:999px;margin-top:6px;
+  /* Indicadores de comparación 2024 (texto pequeño + color del valor 2025) */
+  .tc-prev{
+    display:block;font-size:11.5px;font-weight:600;
+    color:var(--muted);margin-top:4px;
   }
-  .delta-ok{background:#e6f4ec;color:#1f9254}
-  .delta-bad{background:#fde8e8;color:#c0392b}
-  .delta-neu{background:#f3f4f6;color:#6b7280}
-  .kpi-delta{
-    font-size:11.5px;font-weight:700;margin-top:6px;
-    padding:2px 8px;border-radius:999px;display:inline-block;
+  .kpi-prev{
+    font-size:11.5px;font-weight:600;color:var(--muted);
+    margin-top:6px;
   }
+  .val-ok{color:#1f9254 !important}
+  .val-bad{color:#c0392b !important}
+  .val-neu{color:var(--ink) !important}
 
   /* scrollbar */
   ::-webkit-scrollbar{width:10px;height:10px}
@@ -717,24 +717,15 @@ function hasData(tasaCode){
 function getTasaData24(tasaCode, hoja){
   return (DATOS_2024[hoja]||[]).filter(r => r[0] === tasaCode);
 }
-// delta en puntos porcentuales (2025 − 2024), null si falta alguno
-function deltaPp(v25, v24){
-  if(!isNum(v25) || !isNum(v24)) return null;
-  return v25 - v24;
-}
-function fmtDelta(d){
-  if(d === null) return '';
-  const sign = d >= 0 ? '+' : '';
-  return `${sign}${(d*100).toFixed(1)} pp`;
-}
-function deltaClass(d, tasaCode){
-  if(d === null) return '';
-  // Para tasas "buenas" (aprobación, cobertura): subida=ok, bajada=bad
-  // Para tasas "malas" (reprobación, deserción, etc.): subida=bad, bajada=ok
-  const esBuena = ['APROBACION','COBERTURA_NETA'].includes(tasaCode);
-  if(d > 0.001) return esBuena ? 'delta-ok' : 'delta-bad';
-  if(d < -0.001) return esBuena ? 'delta-bad' : 'delta-ok';
-  return 'delta-neu';
+// Clase de color del valor 2025 según si mejora o empeora vs 2024
+// APROBACION y COBERTURA_NETA: subir mejora; el resto: bajar mejora
+function valClass(v25, v24, tasaCode){
+  if(!isNum(v25) || !isNum(v24)) return 'val-neu';
+  const d = v25 - v24;
+  if(Math.abs(d) < 0.001) return 'val-neu';
+  const esAscendente = ['APROBACION','COBERTURA_NETA'].includes(tasaCode);
+  if(d > 0) return esAscendente ? 'val-ok' : 'val-bad';
+  return esAscendente ? 'val-bad' : 'val-ok';
 }
 
 /* Mapa de nombres legibles a códigos canónicos para localizar análisis */
@@ -825,19 +816,19 @@ function renderHome(){
     const total24 = resumen24.find(r => String(r[1]).toLowerCase().includes('total'));
     const val25 = total25 ? total25[2] : null;
     const val24 = total24 ? total24[2] : null;
-    const d = deltaPp(val25, val24);
+    const cls = valClass(val25, val24, t.code);
     const metric = ready && val25 != null ? fmtPct(val25) : (cargando ? '…' : '—');
-    const deltaHtml = d !== null ? `<span class="tc-delta ${deltaClass(d, t.code)}">${fmtDelta(d)} vs 2024</span>` : '';
+    const prevHtml = isNum(val24) ? `<span class="tc-prev">2024: ${fmtPct(val24)}</span>` : '';
     return `
       <div class="tasa-card" onclick="goTasa('${t.code}')">
         <div class="tc-icon" style="background:${t.gradient}">${t.ico}</div>
         <h3 class="tc-name">${esc(t.nombre)}</h3>
         <p class="tc-desc">${esc(t.descripcion)}</p>
         <div class="tc-metric">
-          <span class="v">${metric}</span>
+          <span class="v ${cls}">${metric}</span>
           <span class="l">2025</span>
         </div>
-        ${deltaHtml}
+        ${prevHtml}
         <svg class="tc-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${t.color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
         </svg>
@@ -977,14 +968,13 @@ function renderDashboard(t){
     return;
   }
 
-  // KPIs con delta
+  // KPIs (2025 grande, 2024 chico de referencia)
   const kpis = resumen.map(r=>{
     const label = String(r[1]);
     const val25 = r[2];
     const row24 = resumen24.find(r24 => String(r24[1]) === label);
     const val24 = row24 ? row24[2] : null;
-    const d = deltaPp(val25, val24);
-    return {label, val25, val24, d};
+    return {label, val25, val24};
   });
 
   // Cobertura Neta no muestra: Tasa por edad, Distribución de establecimientos, ni Tops
@@ -998,17 +988,15 @@ function renderDashboard(t){
   }) + `
     <div class="kpi-row">
       ${kpis.map(k=>{
-        const cls = String(k.label).toLowerCase().includes('total') ? 'accent' :
+        const cardCls = String(k.label).toLowerCase().includes('total') ? 'accent' :
                    (isNum(k.val25) && k.val25>=0.93 ? 'ok' : (isNum(k.val25) && k.val25<0.85 ? 'bad' : ''));
-        const dCls = k.d !== null ? deltaClass(k.d, t.code) : '';
-        const deltaHtml = k.d !== null
-          ? `<div class="kpi-delta ${dCls}">${fmtDelta(k.d)} vs 2024</div>`
-          : (isNum(k.val24) ? `<div class="kpi-delta delta-neu">2024: ${fmtPct(k.val24)}</div>` : '');
-        return `<div class="kpi ${cls}">
+        const valCls = valClass(k.val25, k.val24, t.code);
+        const prevHtml = isNum(k.val24) ? `<div class="kpi-prev">2024: ${fmtPct(k.val24)}</div>` : '';
+        return `<div class="kpi ${cardCls}">
           <div class="label">${esc(k.label)}</div>
-          <div class="value">${fmtPct(k.val25)}</div>
+          <div class="value ${valCls}">${fmtPct(k.val25)}</div>
           <div class="bar"><span style="width:${isNum(k.val25)?Math.round(k.val25*100):0}%"></span></div>
-          ${deltaHtml}
+          ${prevHtml}
         </div>`;
       }).join('')}
     </div>
@@ -1026,7 +1014,13 @@ function renderDashboard(t){
     ${renderAnalisisChart('RESUMEN', t.code)}
     ${renderAnalisisChart('TASA_GRADO', t.code)}
 
-    ${isCN ? '' : `
+    ${isCN ? `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><div><h3>Tasa por comuna</h3><div class="sub">Tasa total por comuna</div></div></div>
+      <div class="card-body"><div class="chart-wrap" style="height:520px"><canvas id="chComuna"></canvas></div></div>
+      ${renderAnalisisChart('TASA_COMUNA', t.code)}
+    </div>
+    ` : `
     <div class="grid-charts grid-2">
       <div class="card">
         <div class="card-head"><div><h3>Tasa por edad</h3><div class="sub">5 a 16 años</div></div></div>
@@ -1129,15 +1123,38 @@ function renderDashboard(t){
     }));
   }
 
-  // Comuna, Distribución por rango y Rankings — solo si NO es Cobertura Neta
-  if(!isCN){
-    // Comuna (horizontal) — solo Total con etiquetas de datos en %
+  // Comuna (horizontal) — siempre visible, incluso para Cobertura Neta
+  {
     const comunaOpts = JSON.parse(JSON.stringify(commonOpts));
     comunaOpts.indexAxis = 'y';
     comunaOpts.plugins.legend = {display:true, labels:{font:{family:'Inter',size:12}, color:'#3a4a6b'}};
+    comunaOpts.layout = {padding:{right:64}}; // espacio para etiquetas a la derecha
     comunaOpts.scales = {
       x:{ticks:{callback:v=>(v*100).toFixed(0)+'%', font:{family:'Inter'}, color:'#3a4a6b'}, grid:{color:'#eef2f7'}, suggestedMin:0, suggestedMax:isLowScale?(['DESERCION','EXTRAEDAD'].includes(t.code)?0.08:0.15):1},
       y:{ticks:{font:{family:'Inter', size:10}, color:'#3a4a6b', autoSkip:false}, grid:{color:'#eef2f7'}}
+    };
+    // Plugin: etiqueta numérica al final de cada barra con formato 3.06%
+    const labelPctPlugin = {
+      id: 'labelPctComuna',
+      afterDatasetsDraw(chart){
+        const {ctx} = chart;
+        chart.data.datasets.forEach((ds, i) => {
+          const meta = chart.getDatasetMeta(i);
+          if(meta.hidden) return;
+          const isOlder = ds.label === '2024';
+          meta.data.forEach((bar, idx) => {
+            const v = ds.data[idx];
+            if(!isFinite(v) || v == null) return;
+            ctx.save();
+            ctx.fillStyle = isOlder ? '#6b7280' : '#0f1f3d';
+            ctx.font = (isOlder ? '500 9.5px Inter' : '700 10px Inter');
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText((v*100).toFixed(2)+'%', bar.x + 4, bar.y);
+            ctx.restore();
+          });
+        });
+      }
     };
     // Alinear datos 2024 al orden de comunas de 2025 (por código de comuna, col índice 1)
     const comunaData24 = tc.map(r => {
@@ -1150,8 +1167,13 @@ function renderDashboard(t){
         {label:'2025', data:tc.map(r=>r[5]), backgroundColor:t.color, borderRadius:3, order:1},
         {label:'2024', data:comunaData24, backgroundColor:C24, borderRadius:2, order:2}
       ]},
-      options: comunaOpts
+      options: comunaOpts,
+      plugins:[labelPctPlugin]
     }));
+  }
+
+  // Distribución por rango y Rankings — solo si NO es Cobertura Neta
+  if(!isCN){
     const bins = isLowScale ? (
       ['DESERCION','EXTRAEDAD'].includes(t.code)
         ? [{label:'< 1%',  min:0,    max:0.01},
