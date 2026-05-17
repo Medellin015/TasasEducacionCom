@@ -1,1480 +1,1924 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seguimiento a Tareas - ACTIVA</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tasas Educativas · Medellín · Distrito CTeI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<style>
+  :root{
+    --bg:#f3f5f9;
+    --panel:#ffffff;
+    --ink:#0f1f3d;
+    --ink-2:#3a4a6b;
+    --muted:#7686a1;
+    --line:#e4e9f2;
+    --brand:#0b3b7a;
+    --brand-2:#1552b3;
+    --accent:#f4b400;
+    --accent-2:#e89b00;
+    --ok:#1f9254;
+    --bad:#c0392b;
+    --chip:#eef3fb;
+    --row-alt:#fbfcfe;
+    --shadow:0 1px 2px rgba(15,31,61,.04), 0 4px 16px rgba(15,31,61,.06);
+    --shadow-lg:0 4px 12px rgba(15,31,61,.08), 0 20px 40px rgba(15,31,61,.1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+  }
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  /* ========== TOP BAR ========== */
+  header.topbar{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(135deg,#0b3b7a 0%,#1552b3 100%);
+    color:#fff;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;height:68px;
+    box-shadow:0 2px 10px rgba(15,31,61,.15);
+  }
+  .brand{display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+  .brand:hover .brand-logo{transform:scale(1.04)}
+  .org-logo{
+    width:44px;height:44px;
+    border-radius:9px;
+    background:rgba(255,255,255,.08);
+    border:1.5px dashed rgba(255,255,255,.35);
+    display:grid;place-items:center;
+    color:rgba(255,255,255,.55);
+    font-size:9.5px;font-weight:700;letter-spacing:.6px;
+    overflow:hidden;flex-shrink:0;
+  }
+  .org-logo:has(img),.org-logo:has(svg){background:transparent;border:none}
+  .org-logo img,.org-logo svg{width:100%;height:100%;object-fit:contain}
+  .brand-logo{
+    width:44px;height:44px;
+    background:linear-gradient(135deg, #ffd747 0%, #f4b400 100%);
+    border-radius:11px;
+    display:grid;place-items:center;
+    box-shadow:0 3px 10px rgba(0,0,0,.18), inset 0 -2px 4px rgba(0,0,0,.08);
+    transition:transform .2s ease;
+  }
+  .brand-title{display:flex;flex-direction:column;line-height:1.2}
+  .brand-title b{font-size:15.5px;font-weight:700;letter-spacing:.2px}
+  .brand-title span{font-size:11.5px;opacity:.8;font-weight:400}
+  .top-actions{display:flex;gap:10px;align-items:center}
+  .btn{
+    border:0;cursor:pointer;font-family:inherit;font-weight:600;font-size:13px;
+    padding:9px 16px;border-radius:8px;display:inline-flex;align-items:center;gap:7px;
+    transition:all .15s ease;white-space:nowrap;
+  }
+  .btn-primary{background:var(--accent);color:#0b3b7a}
+  .btn-primary:hover{background:#ffc527;transform:translateY(-1px);box-shadow:0 4px 12px rgba(244,180,0,.35)}
+  .btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.25)}
+  .btn-ghost:hover{background:rgba(255,255,255,.08)}
+  .btn-sm{padding:6px 12px;font-size:12px}
+  .btn-outline{background:#fff;color:var(--brand);border:1px solid var(--line)}
+  .btn-outline:hover{border-color:var(--brand-2);color:var(--brand-2);box-shadow:var(--shadow)}
 
-  <style>
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes slideInLeft { from { opacity: 0; transform: translateX(-100%); } to { opacity: 1; transform: translateX(0); } }
-    .anim-fade { animation: fadeIn 200ms ease-out; }
-    .anim-slide-up { animation: slideUp 220ms ease-out; }
-    .anim-slide-in-right { animation: slideInRight 200ms ease-out; }
-    .anim-slide-in-left { animation: slideInLeft 220ms ease-out; }
-  </style>
+  /* ========== APP LAYOUT ========== */
+  .app-wrap{display:flex;min-height:calc(100vh - 68px)}
+  aside.sidebar{
+    width:260px;flex-shrink:0;
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    overflow-y:auto;
+    padding:14px 10px;
+  }
+  main.content{flex:1;overflow-y:auto;padding:22px 28px 40px}
+
+  /* ========== SIDEBAR ========== */
+  .side-group{margin-bottom:18px}
+  .side-label{
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;
+    color:var(--muted);padding:8px 12px 6px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 12px;margin:2px 0;
+    border-radius:8px;cursor:pointer;
+    color:var(--ink-2);font-weight:500;font-size:13px;
+    transition:background .12s, color .12s;
+    border-left:3px solid transparent;
+  }
+  .nav-item:hover{background:var(--chip);color:var(--brand)}
+  .nav-item.active{
+    background:linear-gradient(90deg, rgba(11,59,122,.08), rgba(11,59,122,.02));
+    color:var(--brand);font-weight:600;
+    border-left-color:var(--brand);
+  }
+  .nav-ico{width:18px;display:inline-flex;justify-content:center;font-size:15px}
+  .nav-back{
+    padding:10px 12px;margin:6px 10px 14px;
+    background:var(--chip);color:var(--brand);
+    border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;
+    display:flex;align-items:center;gap:8px;transition:background .12s;
+  }
+  .nav-back:hover{background:#dce6f5}
+
+  /* ========== PAGE HEAD ========== */
+  .page-head{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    margin-bottom:20px;gap:20px;flex-wrap:wrap;
+  }
+  .page-head h1{margin:0;font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
+  .page-head .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .page-actions{display:flex;gap:8px;align-items:center}
+  .breadcrumb{
+    font-size:12px;color:var(--muted);margin-bottom:4px;
+  }
+  .breadcrumb a{color:var(--brand-2);cursor:pointer;text-decoration:none}
+  .breadcrumb a:hover{text-decoration:underline}
+
+  /* ========== KPIs ========== */
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:14px;margin-bottom:20px;
+  }
+  .kpi{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:16px 18px;box-shadow:var(--shadow);
+    position:relative;overflow:hidden;
+  }
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:linear-gradient(180deg,var(--brand),var(--brand-2));}
+  .kpi.accent::before{background:linear-gradient(180deg,var(--accent),var(--accent-2))}
+  .kpi.ok::before{background:linear-gradient(180deg,#2ecc71,#1f9254)}
+  .kpi.bad::before{background:linear-gradient(180deg,#e74c3c,#c0392b)}
+  .kpi .label{font-size:11.5px;font-weight:600;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+  .kpi .value{font-size:28px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.5px}
+  .kpi .bar{height:6px;background:#eef3fb;border-radius:4px;margin-top:10px;overflow:hidden}
+  .kpi .bar span{display:block;height:100%;
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:4px;}
+
+  /* ========== CHARTS GRID ========== */
+  .grid-charts{display:grid;gap:16px;margin-bottom:22px}
+  .grid-2{grid-template-columns:repeat(auto-fit, minmax(420px, 1fr))}
+  .card{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;box-shadow:var(--shadow);overflow:hidden;
+  }
+  .card-head{padding:14px 18px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .card-head h3{margin:0;font-size:14px;font-weight:700;color:var(--ink)}
+  .card-head .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .card-body{padding:16px 18px}
+  .chart-wrap{position:relative;height:300px}
+  .chart-wrap.lg{height:380px}
+  .chart-wrap.sm{height:240px}
+
+  /* ========== TABLES ========== */
+  .table-wrap{max-height:600px;overflow:auto;border-top:1px solid var(--line)}
+  table.data{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.data thead th{
+    position:sticky;top:0;z-index:2;background:#f0f4fa;color:var(--ink);
+    font-weight:700;text-align:left;padding:10px 12px;
+    border-bottom:2px solid var(--line);white-space:nowrap;
+  }
+  table.data tbody td{
+    padding:8px 12px;border-bottom:1px solid var(--line);
+    color:var(--ink-2);white-space:nowrap;
+  }
+  table.data tbody tr:nth-child(even) td{background:var(--row-alt)}
+  table.data tbody tr:hover td{background:#eef3fb}
+  td.num, th.num{text-align:right;font-variant-numeric:tabular-nums}
+  td.pct-cell{font-weight:600}
+  .rate-hi{color:#1f9254}
+  .rate-mid{color:#b38100}
+  .rate-lo{color:#c0392b}
+  .table-tools{
+    padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);background:#fafbfd;
+  }
+  .search-input{
+    flex:1;min-width:200px;max-width:360px;
+    padding:8px 12px 8px 34px;border:1px solid var(--line);border-radius:8px;
+    font-family:inherit;font-size:13px;background:#fff;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237686a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>");
+    background-repeat:no-repeat;background-position:10px center;
+    color:var(--ink);outline:none;transition:border-color .15s;
+  }
+  .search-input:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(21,82,179,.12)}
+  .count-chip{
+    background:var(--chip);color:var(--brand);padding:5px 10px;border-radius:999px;
+    font-size:11.5px;font-weight:600;
+  }
+  .note{
+    background:#fff7e0;border-left:3px solid var(--accent);
+    padding:10px 14px;border-radius:6px;font-size:12.5px;color:#5c4a00;
+    margin-bottom:16px;
+  }
+  .empty-state{
+    text-align:center;padding:60px 20px;color:var(--muted);
+  }
+  .empty-state .emo{font-size:48px;margin-bottom:10px;opacity:.7}
+  .empty-state h3{margin:6px 0;color:var(--ink-2);font-weight:700;font-size:16px}
+  .empty-state p{margin:6px 0;max-width:440px;margin-left:auto;margin-right:auto;font-size:13px}
+
+  /* Two columns */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:1100px){.two-col{grid-template-columns:1fr}}
+  .rank-list{list-style:none;padding:0;margin:0}
+  .rank-list li{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:8px 0;border-bottom:1px dashed var(--line);font-size:12.8px;
+  }
+  .rank-list li:last-child{border-bottom:0}
+  .rank-name{color:var(--ink-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rank-val{font-weight:700;font-variant-numeric:tabular-nums}
+  .rank-badge{
+    display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;
+    background:var(--chip);color:var(--brand);font-weight:700;font-size:11px;margin-right:8px;
+  }
+  .rank-list.top .rank-val{color:#1f9254}
+  .rank-list.bottom .rank-val{color:#c0392b}
+
+  /* ========== HOME (menú de tasas) ========== */
+  .home-hero{
+    background:linear-gradient(135deg, #0b3b7a 0%, #1552b3 100%);
+    color:#fff;border-radius:16px;padding:32px 36px;margin-bottom:28px;
+    box-shadow:var(--shadow-lg);
+    position:relative;overflow:hidden;
+  }
+  .home-hero::after{
+    content:"";position:absolute;right:-40px;top:-40px;
+    width:260px;height:260px;
+    background:radial-gradient(circle, rgba(244,180,0,.25) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .home-hero h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.3px}
+  .home-hero p{margin:10px 0 0;opacity:.88;font-size:14px;max-width:640px;line-height:1.55}
+  .home-title{
+    font-size:14px;font-weight:700;color:var(--ink);
+    margin:0 0 16px;text-transform:uppercase;letter-spacing:.8px;
+  }
+  .tasas-grid{
+    display:grid;gap:18px;
+    grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  }
+  .tasa-card{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:22px;cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    position:relative;overflow:hidden;
+  }
+  .tasa-card:hover{
+    transform:translateY(-3px);
+    box-shadow:var(--shadow-lg);
+    border-color:var(--brand-2);
+  }
+  .tasa-card .chip{
+    position:absolute;top:14px;right:14px;
+    font-size:10.5px;font-weight:700;padding:4px 9px;border-radius:999px;
+    text-transform:uppercase;letter-spacing:.4px;
+  }
+  .tasa-card .chip.ready{background:#e6f4ec;color:#1f9254}
+  .tasa-card .chip.pend{background:#fff4d6;color:#8a6300}
+  .tc-icon{
+    width:54px;height:54px;border-radius:12px;
+    display:grid;place-items:center;margin-bottom:14px;
+    font-size:28px;color:#fff;
+  }
+  .tc-name{font-size:18px;font-weight:800;color:var(--ink);margin:0 0 4px;letter-spacing:-.2px}
+  .tc-desc{font-size:12.5px;color:var(--muted);margin:0 0 14px;min-height:34px;line-height:1.5}
+  .tc-metric{
+    display:flex;align-items:baseline;gap:8px;
+    padding-top:12px;border-top:1px solid var(--line);
+  }
+  .tc-metric .v{font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-.3px}
+  .tc-metric .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .tc-arrow{
+    position:absolute;right:22px;bottom:22px;opacity:.4;
+    transition:opacity .15s, transform .15s;
+  }
+  .tasa-card:hover .tc-arrow{opacity:1;transform:translateX(3px)}
+
+  /* Toast de carga "Conectando con la base de datos" */
+  .loading-toast{
+    position:fixed;bottom:22px;right:22px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    color:#fff;padding:11px 18px;border-radius:999px;
+    font-size:13px;font-weight:600;
+    display:flex;align-items:center;gap:11px;
+    box-shadow:0 8px 24px rgba(11,59,122,.35);
+    z-index:60;animation:lt-slide .3s ease;
+  }
+  .lt-spinner{
+    width:14px;height:14px;
+    border:2px solid rgba(255,255,255,.35);
+    border-top-color:#fff;border-radius:50%;
+    animation:lt-spin .8s linear infinite;
+  }
+  @keyframes lt-spin{to{transform:rotate(360deg)}}
+  @keyframes lt-slide{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* Panel de análisis textual */
+  .analisis-panel{
+    background:var(--panel);border:1px solid var(--line);
+    border-left:4px solid var(--brand-2);
+    border-radius:14px;padding:22px 26px;
+    margin-top:18px;
+  }
+  .analisis-panel h3{
+    margin:0 0 12px;font-size:14px;color:var(--brand);
+    font-weight:800;letter-spacing:.3px;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;
+  }
+  .analisis-text{
+    white-space:pre-wrap;font-size:13.5px;line-height:1.7;
+    color:var(--ink);max-width:960px;
+  }
+  .chart-analisis{
+    padding:12px 18px 14px;
+    border-top:1px solid var(--line);
+    font-size:12.5px;line-height:1.55;
+    color:var(--muted);
+    background:rgba(248,250,253,.55);
+    border-bottom-left-radius:14px;
+    border-bottom-right-radius:14px;
+    white-space:pre-wrap;
+  }
+  @media(max-width:640px){
+    .loading-toast{bottom:14px;right:14px;left:14px;justify-content:center;font-size:12.5px}
+    .analisis-panel{padding:18px 18px;border-radius:12px}
+    .analisis-text{font-size:12.5px}
+  }
+
+  /* Selector de años (pantalla inicial) */
+  .anios-grid{
+    display:grid;gap:20px;
+    grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));
+    margin-top:6px;
+  }
+  .anio-card{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:16px;padding:28px 26px;cursor:pointer;
+    display:flex;align-items:center;gap:22px;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    position:relative;overflow:hidden;
+  }
+  .anio-card:hover{
+    transform:translateY(-3px);
+    box-shadow:var(--shadow-lg);
+    border-color:var(--brand-2);
+  }
+  .ac-icon{
+    width:64px;height:64px;border-radius:14px;
+    display:grid;place-items:center;flex-shrink:0;
+    font-size:30px;color:#fff;
+  }
+  .ac-body{flex:1;min-width:0}
+  .ac-name{
+    margin:0 0 6px;font-size:19px;font-weight:800;
+    color:var(--ink);letter-spacing:-.2px;
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  }
+  .ac-sub{font-size:14px;font-weight:700;letter-spacing:0}
+  .ac-desc{
+    margin:0;font-size:13px;color:var(--muted);
+    line-height:1.55;
+  }
+  .ac-arrow{flex-shrink:0;opacity:.4;transition:opacity .15s, transform .15s}
+  .anio-card:hover .ac-arrow{opacity:1;transform:translateX(3px)}
+  @media(max-width:640px){
+    .anios-grid{grid-template-columns:1fr;gap:14px}
+    .anio-card{padding:20px;gap:16px}
+    .ac-icon{width:54px;height:54px;font-size:26px;border-radius:12px}
+    .ac-name{font-size:16px}
+    .ac-sub{font-size:13px}
+    .ac-desc{font-size:12.5px}
+  }
+
+  /* Delta badges (tarjetas home y KPIs) */
+  .tc-delta{
+    display:inline-block;font-size:11px;font-weight:700;
+    padding:3px 8px;border-radius:999px;margin-top:6px;
+  }
+  .delta-ok{background:#e6f4ec;color:#1f9254}
+  .delta-bad{background:#fde8e8;color:#c0392b}
+  .delta-neu{background:#f3f4f6;color:#6b7280}
+  .kpi-delta{
+    font-size:11.5px;font-weight:700;margin-top:6px;
+    padding:2px 8px;border-radius:999px;display:inline-block;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#c7cfdd;border-radius:10px;border:2px solid transparent;background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:hover{background:#a8b2c4;background-clip:padding-box;border:2px solid transparent}
+
+  /* ========== RESPONSIVO ========== */
+  .mobile-menu-btn{
+    display:none;
+    background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.2);
+    color:#fff;width:40px;height:40px;
+    border-radius:8px;
+    align-items:center;justify-content:center;
+    cursor:pointer;margin-right:10px;padding:0;
+    transition:background .15s;
+  }
+  .mobile-menu-btn:hover{background:rgba(255,255,255,.22)}
+  .mobile-menu-btn.visible{display:flex}
+  .sidebar-backdrop{
+    display:none;position:fixed;
+    top:68px;left:0;right:0;bottom:0;
+    background:rgba(15,31,61,.45);
+    z-index:29;
+    animation:fadeIn .2s ease;
+  }
+  .sidebar-backdrop.open{display:block}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  @media(max-width:900px){
+    .app-wrap{display:block}
+    aside.sidebar{
+      position:fixed;
+      top:68px;left:-280px;bottom:0;
+      width:260px;z-index:30;
+      transition:left .25s ease;
+      box-shadow:2px 0 20px rgba(0,0,0,.2);
+      border-right:1px solid var(--line);
+      border-bottom:0;
+    }
+    aside.sidebar.open{left:0}
+    main.content{padding:18px 18px 32px}
+    .grid-2{grid-template-columns:1fr !important}
+    .chart-wrap{height:260px}
+    .chart-wrap.lg{height:320px}
+  }
+
+  @media(max-width:640px){
+    header.topbar{height:60px;padding:0 12px}
+    .sidebar-backdrop{top:60px}
+    aside.sidebar{top:60px}
+    .brand-logo{width:36px;height:36px;border-radius:9px}
+    .brand-logo svg{width:22px;height:22px}
+    .brand-title b{font-size:13px}
+    .brand-title span{display:none}
+    .btn{padding:8px 12px;font-size:12px}
+    .top-actions .btn-primary .lbl{display:none}
+    #fuenteChip{font-size:10px !important;padding:3px 7px !important}
+    main.content{padding:14px 14px 28px}
+    .page-head{flex-direction:column;align-items:stretch;gap:12px}
+    .page-head h1{font-size:18px}
+    .page-head .sub{font-size:12px}
+    .page-actions{width:100%}
+    .page-actions .btn{flex:1;justify-content:center}
+    .kpi-row{grid-template-columns:repeat(2, 1fr);gap:10px}
+    .kpi{padding:12px 14px}
+    .kpi .label{font-size:10px}
+    .kpi .value{font-size:20px}
+    .card-head{padding:12px 14px}
+    .card-head h3{font-size:13px}
+    .card-body{padding:12px 14px}
+    .chart-wrap{height:220px}
+    .chart-wrap.lg{height:280px}
+    .chart-wrap.sm{height:180px}
+    .home-hero{padding:24px 22px;border-radius:12px}
+    .home-hero h1{font-size:20px}
+    .home-hero p{font-size:13px;margin-top:8px}
+    .home-title{font-size:12px;margin-bottom:12px}
+    .tasas-grid{gap:12px;grid-template-columns:1fr}
+    .tasa-card{padding:18px}
+    .tc-icon{width:46px;height:46px;font-size:22px;margin-bottom:10px}
+    .tc-name{font-size:16px}
+    .tc-desc{font-size:12px;min-height:0;margin-bottom:10px}
+    .tc-metric .v{font-size:18px}
+    .tc-metric .l{font-size:10px}
+    .tasa-card .chip{font-size:9.5px;padding:3px 7px;top:12px;right:12px}
+    .tc-arrow{right:18px;bottom:18px}
+    table.data{font-size:11.5px}
+    table.data thead th{padding:8px 10px}
+    table.data tbody td{padding:6px 10px}
+    .search-input{max-width:none}
+    .table-wrap{max-height:480px}
+    .two-col{gap:12px}
+    .rank-list li{font-size:12px}
+    .rank-badge{width:20px;height:20px;font-size:10px}
+    .nav-item{padding:8px 12px}
+    .empty-state{padding:40px 16px}
+    .empty-state h3{font-size:15px}
+    .empty-state p{font-size:12.5px}
+    .empty-state .emo{font-size:42px}
+  }
+</style>
 </head>
 <body>
-  <div id="root"></div>
 
-  <script type="text/babel">
-    const { useState, useMemo, useRef, useEffect, useCallback } = React;
+<!-- ============ TOP BAR ============ -->
+<header class="topbar">
+  <button class="mobile-menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="Abrir menú">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="brand" onclick="goHome()">
+    <!-- ============================================================
+         ESPACIO PARA EL LOGO INSTITUCIONAL
+         Reemplaza el contenido de este div por:
+           <img src="URL_o_data_uri_del_logo" alt="Logo institucional">
+         o por un <svg> con tu logo. Contenedor 44×44 px.
+         ============================================================ -->
+    <div class="org-logo" id="orgLogo" aria-label="Logo institucional"><img src="https://raw.githubusercontent.com/Medellin015/TasasEducacion/main/logo.png" alt="Logo institucional"></div>
+    <div class="brand-logo">
+      <!-- Birrete de graduación (logo del dashboard) -->
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3 L2 8 L12 13 L22 8 L12 3 Z" fill="#0b3b7a" stroke="#0b3b7a" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M6 10 L6 15 C6 16.5 8.5 18 12 18 C15.5 18 18 16.5 18 15 L18 10" stroke="#0b3b7a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 8 L22 13" stroke="#0b3b7a" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="22" cy="14.5" r="1.4" fill="#0b3b7a"/>
+      </svg>
+    </div>
+    <div class="brand-title">
+      <b>Tasas Educativas</b>
+      <span>Medellín · Comparativo 2024 – 2025</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="btn btn-primary" id="btnDownloadAll">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="lbl">Descargar libro completo</span>
+    </button>
+    <button class="btn btn-primary" id="btnDownloadInformeAll">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span class="lbl">Descargar análisis completo</span>
+    </button>
+  </div>
+</header>
 
-    const INITIAL_TASKS = [];
+<div class="app-wrap" id="appWrap">
+  <!-- sidebar dinámico -->
+  <aside class="sidebar" id="sidebar" style="display:none"></aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+  <main class="content" id="main"></main>
+  <div class="loading-toast" id="loadingToast" style="display:none">
+    <span class="lt-spinner"></span>
+    <span>Conectando con la base de datos…</span>
+  </div>
+</div>
 
-    const DEPARTMENTS = [
-      "Todas las Tareas",
-      "Gerencia",
-      "Subgerencia Comercial",
-      "Dirección Jurídica",
-      "Dirección Administrativa y Financiera",
-      "Comunicaciones",
-      "Indicadores"
-    ];
+<script>
+/* =========================================================
+   DATOS EMBEBIDOS — formato unificado por dimensión
+   Las columnas de cada arreglo coinciden con las del Excel:
+     RESUMEN: [TASA, Indicador, Valor]
+     TASA_GRADO: [TASA, Grado, F_mat, M_mat, Total_mat, Tasa]
+     TASA_EDAD: [TASA, Edad, F_mat, M_mat, Total_mat, Tasa]
+     TASA_COMUNA: [TASA, Codigo, Comuna, F, M, Total]
+     TASAS_ESTABLECIMIENTO: [TASA, DANE, Nombre, Tasa]
+     TASAS_ESTAB_GRADO: [TASA, DANE, Nombre, G0..G11, G99, Total]
+   ========================================================= */
+/* =========================================================
+   CONEXIÓN CON GOOGLE SHEETS VÍA APPS SCRIPT
+   ---------------------------------------------------------
+   Pega aquí la URL de la aplicación web que Apps Script te
+   entregó al desplegar el Code.gs. Debe terminar en /exec.
+   Si está vacía, el dashboard usa los datos embebidos.
+   ========================================================= */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFGa4ZN3qBglz4NO6Qxex02sRJiZFFrNKr_G0CahT8YIDkM7OIaQPGNAXqy7Oes5E/exec';
 
-    const PROFILE_IMAGES = {
-      "Todas las Tareas": "todas.png",
-      "Gerencia": "gerencia.png",
-      "Subgerencia Comercial": "comercial.png",
-      "Dirección Jurídica": "juridica.png",
-      "Dirección Administrativa y Financiera": "administrativa.png",
-      "Comunicaciones": "comunicaciones.png",
-      "Indicadores": "indicadores.png"
-    };
+let FUENTE_DATOS = 'local'; // 'local' | 'remote' | 'loading' | 'error'
+let META_REMOTA = null;
 
-    // Identificador de versión del frontend para diagnosticar problemas de caché.
-    const FRONTEND_VERSION = "2026-04-29-v3";
-    console.log("[ACTIVA] Frontend versión:", FRONTEND_VERSION);
+const SHEET_ID_2025 = '1C7lRQRpmnrcCpssznzOTJk4hEoJSVb6h_ZyIQQz9IgY';
+const SHEET_ID_2024 = '19VgGZg0Y3ax4RAR-QgkizFM5xLj79U7QyJfFWczOJq0';
 
-    // NUEVA URL PROPORCIONADA
-    const GOOGLE_SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwnE6oJRVYzeBsUd9RJtmXXto_2edzPLjRkiI4bVm8z24dfzkNeCnbEtSoPSHYJymc/exec";
+// Dos almacenes paralelos — DATOS es alias de 2025 para compatibilidad
+const DATOS_2025 = {RESUMEN:[],TASA_GRADO:[],TASA_EDAD:[],TASA_COMUNA:[],TASAS_ESTABLECIMIENTO:[],TASAS_ESTAB_GRADO:[]};
+const DATOS_2024 = {RESUMEN:[],TASA_GRADO:[],TASA_EDAD:[],TASA_COMUNA:[],TASAS_ESTABLECIMIENTO:[],TASAS_ESTAB_GRADO:[]};
+let DATOS = DATOS_2025; // alias — todas las funciones existentes leen 2025
 
-    // Lista de roles disponibles para login. Las contraseñas viven solo en el backend.
-    const ROLE_LIST = [
-      "Gerencia",
-      "Subgerencia Comercial",
-      "Dirección Jurídica",
-      "Dirección Administrativa y Financiera",
-      "Comunicaciones",
-      "Administrador"
-    ];
+const currentAnio = '2025'; // fijo en esta versión comparativa
+const ANIO_BY_CODE = { '2025': { sub: 'Comparativo 2024–2025' } };
 
-    function userCanModifyTask(user, task) {
-      if (!user) return false;
-      if (user.role === "Administrador") return true;
-      return task.responsablePrincipal === user.role;
+/* Metadatos de las 6 tasas */
+const TASAS = [
+  {
+    code:'APROBACION',  nombre:'Aprobación',
+    descripcion:'Estudiantes que aprueban el año escolar sobre la matrícula total.',
+    color:'#1f9254', gradient:'linear-gradient(135deg,#2ecc71,#1f9254)', ico:'🎓'
+  },
+  {
+    code:'REPROBACION', nombre:'Reprobación',
+    descripcion:'Estudiantes que no alcanzan los logros mínimos del año escolar.',
+    color:'#c0392b', gradient:'linear-gradient(135deg,#e74c3c,#c0392b)', ico:'📕'
+  },
+  {
+    code:'DESERCION',   nombre:'Deserción',
+    descripcion:'Estudiantes que abandonan el sistema escolar en el año lectivo.',
+    color:'#e67e22', gradient:'linear-gradient(135deg,#f39c12,#e67e22)', ico:'🚪'
+  },
+  {
+    code:'REPITENCIA',  nombre:'Repitencia',
+    descripcion:'Estudiantes que repiten el mismo grado escolar.',
+    color:'#b38100', gradient:'linear-gradient(135deg,#f4b400,#b38100)', ico:'🔁'
+  },
+  {
+    code:'COBERTURA_NETA', nombre:'Cobertura Neta',
+    descripcion:'Matriculados en la edad oficial correspondiente a cada nivel educativo.',
+    color:'#1552b3', gradient:'linear-gradient(135deg,#3498db,#1552b3)', ico:'🌐'
+  },
+  {
+    code:'EXTRAEDAD', nombre:'Extraedad',
+    descripcion:'Estudiantes matriculados con edad superior a la esperada para su grado.',
+    color:'#6f42c1', gradient:'linear-gradient(135deg,#9b59b6,#6f42c1)', ico:'⏱️'
+  },
+];
+const TASA_BY_CODE = Object.fromEntries(TASAS.map(t=>[t.code, t]));
+
+/* Definición de las vistas dentro de cada tasa */
+const VISTAS = [
+  {key:'dashboard',  nombre:'Dashboard',                ico:'📊', group:'Vista general'},
+  {key:'RESUMEN',    nombre:'Resumen',                  ico:'📋', group:'Vista general'},
+  {key:'TASA_GRADO', nombre:'Tasa por grado',           ico:'🎓', group:'Dimensiones'},
+  {key:'TASA_EDAD',  nombre:'Tasa por edad',            ico:'👶', group:'Dimensiones'},
+  {key:'TASA_COMUNA',nombre:'Tasa por comuna',          ico:'🗺️', group:'Dimensiones'},
+  {key:'TASAS_ESTABLECIMIENTO', nombre:'Tasas por establecimiento', ico:'🏫', group:'Establecimientos'},
+  {key:'TASAS_ESTAB_GRADO',     nombre:'Tasas × grado',             ico:'📑', group:'Establecimientos'},
+];
+
+/* =========================================================
+   ESTADO Y NAVEGACIÓN
+   ========================================================= */
+let currentTasa = null;   // code
+let currentVista = 'dashboard';
+let chartInstances = [];
+function destroyCharts(){
+  chartInstances.forEach(c=>{try{c.destroy()}catch(e){}});
+  chartInstances = [];
+}
+
+function goHome(){
+  currentTasa = null;
+  document.getElementById('sidebar').style.display = 'none';
+  const btn = document.getElementById('menuBtn');
+  if(btn) btn.classList.remove('visible');
+  toggleSidebar(false);
+  renderHome();
+}
+// Alias por compatibilidad con breadcrumbs existentes
+function goInicio(){ goHome(); }
+function goAnio(){ goHome(); }
+function goTasa(code, vista='dashboard'){
+  currentTasa = code;
+  currentVista = vista;
+  renderSidebar();
+  document.getElementById('sidebar').style.display = '';
+  const btn = document.getElementById('menuBtn');
+  if(btn) btn.classList.add('visible');
+  renderVista();
+}
+function toggleSidebar(force){
+  const s = document.getElementById('sidebar');
+  const b = document.getElementById('sidebarBackdrop');
+  if(!s || !b) return;
+  const open = typeof force === 'boolean' ? force : !s.classList.contains('open');
+  s.classList.toggle('open', open);
+  b.classList.toggle('open', open);
+}
+
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+const esc = s => s==null?'':String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isNum = v => typeof v==='number' && !isNaN(v);
+const fmtPct = v => isNum(v) ? (v*100).toFixed(2)+'%' : (v??'');
+const fmtNum = v => isNum(v) ? v.toLocaleString('es-CO') : (v??'');
+function rateClass(v){
+  if(!isNum(v)) return '';
+  if(v>=0.92) return 'rate-hi';
+  if(v>=0.85) return 'rate-mid';
+  return 'rate-lo';
+}
+
+function getTasaData(tasaCode, hoja){
+  return (DATOS[hoja]||[]).filter(r => r[0] === tasaCode);
+}
+function hasData(tasaCode){
+  return (DATOS.RESUMEN||[]).some(r => r[0] === tasaCode);
+}
+function getTasaData24(tasaCode, hoja){
+  return (DATOS_2024[hoja]||[]).filter(r => r[0] === tasaCode);
+}
+// delta en puntos porcentuales (2025 − 2024), null si falta alguno
+function deltaPp(v25, v24){
+  if(!isNum(v25) || !isNum(v24)) return null;
+  return v25 - v24;
+}
+function fmtDelta(d){
+  if(d === null) return '';
+  const sign = d >= 0 ? '+' : '';
+  return `${sign}${(d*100).toFixed(1)} pp`;
+}
+function deltaClass(d, tasaCode){
+  if(d === null) return '';
+  // Para tasas "buenas" (aprobación, cobertura): subida=ok, bajada=bad
+  // Para tasas "malas" (reprobación, deserción, etc.): subida=bad, bajada=ok
+  const esBuena = ['APROBACION','COBERTURA_NETA'].includes(tasaCode);
+  if(d > 0.001) return esBuena ? 'delta-ok' : 'delta-bad';
+  if(d < -0.001) return esBuena ? 'delta-bad' : 'delta-ok';
+  return 'delta-neu';
+}
+
+/* Mapa de nombres legibles a códigos canónicos para localizar análisis */
+const _TASA_NOMBRE_NORM = {
+  'APROBACION':'APROBACION','APROBACIÓN':'APROBACION',
+  'REPROBACION':'REPROBACION','REPROBACIÓN':'REPROBACION',
+  'DESERCION':'DESERCION','DESERCIÓN':'DESERCION',
+  'REPITENCIA':'REPITENCIA',
+  'COBERTURA NETA':'COBERTURA_NETA','COBERTURA_NETA':'COBERTURA_NETA',
+  'EXTRAEDAD':'EXTRAEDAD'
+};
+function _normTasa(s){
+  if(s===null||s===undefined) return null;
+  return _TASA_NOMBRE_NORM[String(s).trim().toUpperCase()] || null;
+}
+/* Orden fijo de las tasas, para mapear las primeras 6 filas de cada hoja
+   (donde irían los análisis cortos en columna I) a un código de tasa. */
+const _ORDEN_TASAS = ['APROBACION','REPROBACION','DESERCION','REPITENCIA','COBERTURA_NETA','EXTRAEDAD'];
+
+/* Lee el análisis LARGO de cada tasa desde RESUMEN, columna E (índice 4).
+   Si hay una fila en RESUMEN cuyo TASA coincide y E tiene texto, ese es el análisis
+   específico de esa tasa. Si no hay específico, usa el primer texto encontrado
+   en columna E como análisis general. */
+function getAnalisisTasa(tasaCode){
+  const idx = _ORDEN_TASAS.indexOf(tasaCode);
+  if(idx < 0) return null;
+  const filas = DATOS['RESUMEN'] || [];
+  const recolectados = [];
+  for(const row of filas){
+    if(!row) continue;
+    const v = row[4]; // columna E (E6-E11 mapeadas en orden a las 6 tasas)
+    if(v !== null && v !== undefined && String(v).trim() !== ''){
+      recolectados.push(String(v).trim());
+      if(recolectados.length >= 6) break;
     }
+  }
+  return idx < recolectados.length ? recolectados[idx] : null;
+}
+function renderAnalisisPanel(tasaCode){
+  const txt = getAnalisisTasa(tasaCode);
+  if(!txt || !txt.trim()) return '';
+  return `
+    <div class="analisis-panel">
+      <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Análisis</h3>
+      <div class="analisis-text">${esc(txt)}</div>
+    </div>`;
+}
+/* Lee el análisis CORTO de cada gráfica del Dashboard.
+   Estrategia: recorre todas las filas de la hoja y recolecta las primeras 6
+   celdas que tengan texto en columna I (índice 8). Esas 6 celdas se mapean en
+   orden fijo a las 6 tasas: 0=APROBACION, 1=REPROBACION, 2=DESERCION,
+   3=REPITENCIA, 4=COBERTURA_NETA, 5=EXTRAEDAD.
+   Esto da flexibilidad: las celdas pueden estar en filas 5-10, 6-11 o cualquier
+   otra posición, mientras estén en orden. */
+function getAnalisisCorto(hoja, tasaCode){
+  const idx = _ORDEN_TASAS.indexOf(tasaCode);
+  if(idx < 0) return null;
+  const filas = DATOS[hoja] || [];
+  const recolectados = [];
+  for(const row of filas){
+    if(!row) continue;
+    const v = row[8]; // columna I
+    if(v !== null && v !== undefined && String(v).trim() !== ''){
+      recolectados.push(String(v));
+      if(recolectados.length >= 6) break;
+    }
+  }
+  return idx < recolectados.length ? recolectados[idx] : null;
+}
+function renderAnalisisChart(hoja, tasaCode){
+  const txt = getAnalisisCorto(hoja, tasaCode);
+  if(!txt || !txt.trim()) return '';
+  return `<div class="chart-analisis">${esc(txt)}</div>`;
+}
 
-    // Generación de IDs robusta (evita colisiones en concurrencia)
-    function generateTaskId() {
-      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-        return "TAREA-" + crypto.randomUUID();
+/* =========================================================
+   VISTA HOME: menú de tasas (comparativo 2024–2025)
+   ========================================================= */
+function renderHome(){
+  destroyCharts();
+  const main = document.getElementById('main');
+  const cargando = FUENTE_DATOS === 'loading';
+  const cards = TASAS.map(t=>{
+    const ready = hasData(t.code);
+    const resumen25 = getTasaData(t.code, 'RESUMEN');
+    const resumen24 = getTasaData24(t.code, 'RESUMEN');
+    const total25 = resumen25.find(r => String(r[1]).toLowerCase().includes('total'));
+    const total24 = resumen24.find(r => String(r[1]).toLowerCase().includes('total'));
+    const val25 = total25 ? total25[2] : null;
+    const val24 = total24 ? total24[2] : null;
+    const d = deltaPp(val25, val24);
+    const metric = ready && val25 != null ? fmtPct(val25) : (cargando ? '…' : '—');
+    const deltaHtml = d !== null ? `<span class="tc-delta ${deltaClass(d, t.code)}">${fmtDelta(d)} vs 2024</span>` : '';
+    return `
+      <div class="tasa-card" onclick="goTasa('${t.code}')">
+        <div class="tc-icon" style="background:${t.gradient}">${t.ico}</div>
+        <h3 class="tc-name">${esc(t.nombre)}</h3>
+        <p class="tc-desc">${esc(t.descripcion)}</p>
+        <div class="tc-metric">
+          <span class="v">${metric}</span>
+          <span class="l">2025</span>
+        </div>
+        ${deltaHtml}
+        <svg class="tc-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${t.color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </div>`;
+  }).join('');
+
+  main.innerHTML = `
+    <div class="home-hero">
+      <h1>Tasas Educativas · Medellín</h1>
+      <p>Distrito de Ciencia, Tecnología e Innovación · Comparativo 2024–2025. Seleccione una tasa para ver el análisis detallado con evolución interanual.</p>
+    </div>
+    <h2 class="home-title">Indicadores educativos</h2>
+    <div class="tasas-grid">${cards}</div>
+  `;
+}
+
+/* =========================================================
+   SIDEBAR (dentro de una tasa)
+   ========================================================= */
+function renderSidebar(){
+  const t = TASA_BY_CODE[currentTasa];
+  const side = document.getElementById('sidebar');
+  const groups = {};
+  VISTAS.forEach(v => { (groups[v.group] ||= []).push(v); });
+  let html = `
+    <div class="nav-back" onclick="goHome()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Ver todas las tasas
+    </div>
+    <div style="padding:0 12px 12px;border-bottom:1px solid var(--line);margin-bottom:10px">
+      <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:700">Tasa activa</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <div style="width:32px;height:32px;border-radius:8px;background:${t.gradient};display:grid;place-items:center;font-size:18px">${t.ico}</div>
+        <div style="font-weight:700;color:var(--ink);font-size:14px">${esc(t.nombre)}</div>
+      </div>
+    </div>
+  `;
+  for(const [gName, vs] of Object.entries(groups)){
+    html += `<div class="side-group"><div class="side-label">${esc(gName)}</div>`;
+    for(const v of vs){
+      const active = currentVista === v.key ? 'active' : '';
+      html += `
+        <div class="nav-item ${active}" onclick="navTo('${v.key}')">
+          <span class="nav-ico">${v.ico}</span> ${esc(v.nombre)}
+        </div>`;
+    }
+    html += `</div>`;
+  }
+  side.innerHTML = html;
+}
+function navTo(key){
+  currentVista = key;
+  renderSidebar();
+  renderVista();
+  toggleSidebar(false); // cerrar menú móvil al elegir opción
+}
+
+/* =========================================================
+   RENDER VISTA (dentro de una tasa)
+   ========================================================= */
+function renderVista(){
+  destroyCharts();
+  const t = TASA_BY_CODE[currentTasa];
+  if(!hasData(currentTasa) && currentVista !== 'dashboard'){
+    return renderEmpty(t, currentVista);
+  }
+  if(currentVista === 'dashboard') return renderDashboard(t);
+  return renderSheet(t, currentVista);
+}
+
+function renderEmpty(t, key){
+  const main = document.getElementById('main');
+  main.innerHTML = pageHead({
+    title: `${VISTAS.find(v=>v.key===key).nombre}`,
+    subtitle: `${t.nombre} · Comparativo 2024–2025`,
+    breadcrumb:`<a onclick="goHome()">Inicio</a> › ${esc(t.nombre)} › ${esc(VISTAS.find(v=>v.key===key).nombre)}`
+  }) + `
+    <div class="card">
+      <div class="empty-state">
+        <div class="emo">${t.ico}</div>
+        <h3>Sin datos cargados para ${esc(t.nombre)}</h3>
+        <p>Agregue los registros correspondientes en el libro <b>Datos_Tasas_Educativas_Medellin.xlsx</b>, hoja <b>${esc(key)}</b>, usando el código de tasa <b>${esc(t.code)}</b>.</p>
+        <p>Una vez actualizados los datos, regenere el dashboard o pegue los nuevos registros en la constante <code>DATOS</code> al inicio del archivo HTML.</p>
+      </div>
+    </div>`;
+}
+
+/* ========== HEAD reusable ========== */
+function pageHead({title, subtitle, breadcrumb, actions}){
+  return `
+    <div class="page-head">
+      <div>
+        ${breadcrumb ? `<div class="breadcrumb">${breadcrumb}</div>`: ''}
+        <h1>${esc(title)}</h1>
+        <div class="sub">${esc(subtitle||'')}</div>
+      </div>
+      <div class="page-actions">${actions||''}</div>
+    </div>`;
+}
+function downloadBtn(onclickAttr, label='Descargar a Excel'){
+  return `<button class="btn btn-outline btn-sm" ${onclickAttr}>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    ${esc(label)}
+  </button>`;
+}
+
+/* =========================================================
+   RENDER DASHBOARD (dentro de una tasa)
+   ========================================================= */
+function renderDashboard(t){
+  const main = document.getElementById('main');
+  const resumen = getTasaData(t.code, 'RESUMEN');
+  const resumen24 = getTasaData24(t.code, 'RESUMEN');
+  const tg = getTasaData(t.code, 'TASA_GRADO');
+  const tg24 = getTasaData24(t.code, 'TASA_GRADO');
+  const te = getTasaData(t.code, 'TASA_EDAD');
+  const te24 = getTasaData24(t.code, 'TASA_EDAD');
+  const tc = getTasaData(t.code, 'TASA_COMUNA');
+  const tc24 = getTasaData24(t.code, 'TASA_COMUNA');
+  const tes = getTasaData(t.code, 'TASAS_ESTABLECIMIENTO');
+
+  if(!hasData(t.code)){
+    main.innerHTML = pageHead({
+      title:`Dashboard · ${t.nombre}`,
+      subtitle:'Sin datos cargados',
+      breadcrumb:`<a onclick="goHome()">Inicio</a> › ${esc(t.nombre)} › Dashboard`
+    }) + `
+      <div class="card">
+        <div class="empty-state">
+          <div class="emo" style="font-size:56px">${t.ico}</div>
+          <h3>Aún no hay datos para ${esc(t.nombre)}</h3>
+          <p>Cuando cargue los datos en el archivo de Google Sheets, esta vista mostrará KPIs por nivel educativo, desagregaciones por grado, edad y comuna, y los rankings de establecimientos.</p>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // KPIs con delta
+  const kpis = resumen.map(r=>{
+    const label = String(r[1]);
+    const val25 = r[2];
+    const row24 = resumen24.find(r24 => String(r24[1]) === label);
+    const val24 = row24 ? row24[2] : null;
+    const d = deltaPp(val25, val24);
+    return {label, val25, val24, d};
+  });
+
+  // Cobertura Neta no muestra: Tasa por edad, Distribución de establecimientos, ni Tops
+  const isCN = t.code === 'COBERTURA_NETA';
+
+  main.innerHTML = pageHead({
+    title:`Dashboard · ${t.nombre}`,
+    subtitle:`Comparativo 2024–2025 · Tasa de ${t.nombre.toLowerCase()}`,
+    breadcrumb:`<a onclick="goHome()">Inicio</a> › ${esc(t.nombre)} › Dashboard`,
+    actions: `${downloadBtn(`onclick="downloadTasaFull('${t.code}')"`, `Descargar Excel`)} ${FUENTE_DATOS !== 'loading' ? downloadBtn(`onclick="downloadInformeWord('${t.code}')"`, `Descargar Informe (Word)`) : ''}`
+  }) + `
+    <div class="kpi-row">
+      ${kpis.map(k=>{
+        const cls = String(k.label).toLowerCase().includes('total') ? 'accent' :
+                   (isNum(k.val25) && k.val25>=0.93 ? 'ok' : (isNum(k.val25) && k.val25<0.85 ? 'bad' : ''));
+        const dCls = k.d !== null ? deltaClass(k.d, t.code) : '';
+        const deltaHtml = k.d !== null
+          ? `<div class="kpi-delta ${dCls}">${fmtDelta(k.d)} vs 2024</div>`
+          : (isNum(k.val24) ? `<div class="kpi-delta delta-neu">2024: ${fmtPct(k.val24)}</div>` : '');
+        return `<div class="kpi ${cls}">
+          <div class="label">${esc(k.label)}</div>
+          <div class="value">${fmtPct(k.val25)}</div>
+          <div class="bar"><span style="width:${isNum(k.val25)?Math.round(k.val25*100):0}%"></span></div>
+          ${deltaHtml}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="grid-charts grid-2">
+      <div class="card">
+        <div class="card-head"><div><h3>Tasa por nivel educativo</h3><div class="sub">${esc(t.nombre)} por nivel</div></div></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="chNivel"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Tasa por grado</h3><div class="sub">De Transición (0) a 11°</div></div></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="chGrado"></canvas></div></div>
+      </div>
+    </div>
+    ${renderAnalisisChart('RESUMEN', t.code)}
+    ${renderAnalisisChart('TASA_GRADO', t.code)}
+
+    ${isCN ? '' : `
+    <div class="grid-charts grid-2">
+      <div class="card">
+        <div class="card-head"><div><h3>Tasa por edad</h3><div class="sub">5 a 16 años</div></div></div>
+        <div class="card-body"><div class="chart-wrap"><canvas id="chEdad"></canvas></div></div>
+        ${renderAnalisisChart('TASA_EDAD', t.code)}
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Tasa por comuna</h3><div class="sub">Tasa total por comuna</div></div></div>
+        <div class="card-body"><div class="chart-wrap" style="height:520px"><canvas id="chComuna"></canvas></div></div>
+        ${renderAnalisisChart('TASA_COMUNA', t.code)}
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-head"><div><h3>Distribución de establecimientos</h3><div class="sub">Por rango de tasa</div></div></div>
+      <div class="card-body"><div class="chart-wrap"><canvas id="chDist"></canvas></div></div>
+    </div>
+    `}
+
+    ${isCN ? '' : `
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head"><div><h3>🏆 Top 10 establecimientos</h3><div class="sub">Tasas más altas</div></div></div>
+        <div class="card-body"><ol class="rank-list top" id="topList"></ol></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>⚠️ Bottom 10 establecimientos</h3><div class="sub">Tasas más bajas</div></div></div>
+        <div class="card-body"><ol class="rank-list bottom" id="botList"></ol></div>
+      </div>
+    </div>
+    ${renderAnalisisChart('TASAS_ESTABLECIMIENTO', t.code)}
+    `}
+  `;
+
+  // ========== CHARTS ==========
+  const COL_HI = '#1f9254', COL_MID = '#f4b400', COL_LO = '#c0392b';
+  const PINK='#d63384', BLUE='#0d6efd';
+  const commonOpts = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{labels:{font:{family:'Inter', size:12}, color:'#3a4a6b'}},
+      tooltip:{
+        callbacks:{label:ctx=>{
+          const v = ctx.parsed.y ?? ctx.parsed.x ?? ctx.parsed;
+          return `${ctx.dataset.label||''}: ${isNum(v)&&v<=1?(v*100).toFixed(2)+'%':v}`;
+        }}
       }
-      return "TAREA-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+    },
+    scales:{
+      x:{ticks:{font:{family:'Inter'}, color:'#3a4a6b'}, grid:{color:'#eef2f7'}},
+      y:{ticks:{font:{family:'Inter'}, color:'#3a4a6b', callback:v=>(v*100).toFixed(0)+'%'}, grid:{color:'#eef2f7'}, suggestedMin:0, suggestedMax:1}
     }
+  };
+  const isLowScale = ['REPROBACION','DESERCION','REPITENCIA','EXTRAEDAD'].includes(t.code);
+  if(isLowScale) commonOpts.scales.y.suggestedMax = ['DESERCION','EXTRAEDAD'].includes(t.code) ? 0.08 : 0.15;
+  const barColor = v => v>=0.9?COL_HI : v>=0.85?COL_MID : COL_LO;
 
-    // -------------------------------------------------------------------------
-    // Componentes de gráficas (sin cambios funcionales)
-    // -------------------------------------------------------------------------
+  const C24 = 'rgba(156,163,175,0.55)'; // gris para series 2024
+  const C24_SOLID = '#9ca3af';
 
-    const GaugeChart = ({ value, total }) => {
-      const radius = 90;
-      const circumference = Math.PI * radius;
-      const percentage = total === 0 ? 0 : (value / total);
-      const dashoffset = circumference - (percentage * circumference);
-      const pct = total === 0 ? 0 : Math.round(percentage * 100);
+  // Nivel: filas del RESUMEN (quitamos "Total" para el gráfico)
+  const nivelData = resumen.filter(r => !String(r[1]).toLowerCase().includes('total'));
+  const nivelData24 = resumen24.filter(r => !String(r[1]).toLowerCase().includes('total'));
+  chartInstances.push(new Chart(document.getElementById('chNivel'),{
+    type:'bar',
+    data:{labels: nivelData.map(r=>r[1]), datasets:[
+      {label:'2025', data:nivelData.map(r=>r[2]), backgroundColor:nivelData.map(r=>barColor(r[2])), borderRadius:6, order:1},
+      {label:'2024', data:nivelData.map(r=>{ const m=nivelData24.find(r24=>String(r24[1])===String(r[1])); return m?m[2]:null; }),
+       backgroundColor:C24, borderRadius:4, order:2}
+    ]},
+    options: commonOpts
+  }));
 
-      return (
-        <div className="relative flex flex-col items-center justify-center h-48 w-64 group cursor-default">
-          <svg className="w-full h-full" viewBox="0 0 200 120" aria-hidden="true">
-            <path d="M 10 100 A 90 90 0 0 1 190 100" fill="none" stroke="#e5e7eb" strokeWidth="20" strokeLinecap="butt" />
-            <path
-              d="M 10 100 A 90 90 0 0 1 190 100"
-              fill="none"
-              stroke="#1a8241"
-              strokeWidth="20"
-              strokeLinecap="butt"
-              strokeDasharray={circumference}
-              strokeDashoffset={dashoffset}
-              className="transition-all duration-1000 ease-out"
-            />
-          </svg>
-          <div className="absolute bottom-6 flex items-baseline space-x-1">
-            <span className="text-5xl font-semibold text-black" aria-label={`${value} de ${total} tareas completas`}>{value}</span>
-          </div>
-          <div className="absolute bottom-2 left-2 text-sm text-gray-500">0</div>
-          <div className="absolute bottom-2 right-2 text-sm text-gray-500">{total}</div>
-          {/* Tooltip al hover */}
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-3 py-1.5 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-            {value} de {total} tareas · {pct}%
-          </div>
-        </div>
-      );
+  // Grado
+  chartInstances.push(new Chart(document.getElementById('chGrado'),{
+    type:'line',
+    data:{labels:tg.map(r=>r[1]), datasets:[
+      {label:'2025', data:tg.map(r=>r[5]),
+       borderColor:t.color, backgroundColor:hexToRgba(t.color,.12),
+       fill:true, tension:.3, pointRadius:3, pointBackgroundColor:t.color, order:1},
+      {label:'2024', data:tg.map(r=>{ const m=tg24.find(r24=>String(r24[1])===String(r[1])); return m?m[5]:null; }),
+       borderColor:C24_SOLID, backgroundColor:'transparent', borderDash:[5,3],
+       fill:false, tension:.3, pointRadius:3, pointBackgroundColor:C24_SOLID, order:2}
+    ]},
+    options: commonOpts
+  }));
+
+  // Edad — solo si NO es Cobertura Neta
+  if(!isCN){
+    chartInstances.push(new Chart(document.getElementById('chEdad'),{
+      type:'line',
+      data:{labels:te.map(r=>String(r[1])), datasets:[
+        {label:'2025', data:te.map(r=>r[5]),
+         borderColor:'#f4b400', backgroundColor:'rgba(244,180,0,.12)',
+         fill:true, tension:.3, pointRadius:3, pointBackgroundColor:'#f4b400', order:1},
+        {label:'2024', data:te.map(r=>{ const m=te24.find(r24=>String(r24[1])===String(r[1])); return m?m[5]:null; }),
+         borderColor:C24_SOLID, backgroundColor:'transparent', borderDash:[5,3],
+         fill:false, tension:.3, pointRadius:3, pointBackgroundColor:C24_SOLID, order:2}
+      ]},
+      options: commonOpts
+    }));
+  }
+
+  // Comuna, Distribución por rango y Rankings — solo si NO es Cobertura Neta
+  if(!isCN){
+    // Comuna (horizontal) — solo Total con etiquetas de datos en %
+    const comunaOpts = JSON.parse(JSON.stringify(commonOpts));
+    comunaOpts.indexAxis = 'y';
+    comunaOpts.plugins.legend = {display:true, labels:{font:{family:'Inter',size:12}, color:'#3a4a6b'}};
+    comunaOpts.scales = {
+      x:{ticks:{callback:v=>(v*100).toFixed(0)+'%', font:{family:'Inter'}, color:'#3a4a6b'}, grid:{color:'#eef2f7'}, suggestedMin:0, suggestedMax:isLowScale?(['DESERCION','EXTRAEDAD'].includes(t.code)?0.08:0.15):1},
+      y:{ticks:{font:{family:'Inter', size:10}, color:'#3a4a6b', autoSkip:false}, grid:{color:'#eef2f7'}}
     };
-
-    const DoughnutChart = ({ data }) => {
-      const [hoverIdx, setHoverIdx] = useState(null);
-      let cumulativePercent = 0;
-      const total = data.reduce((acc, d) => acc + d.value, 0);
-
-      if (total === 0) return <div className="h-48 flex items-center justify-center text-gray-400">Sin datos</div>;
-
-      const hovered = hoverIdx !== null ? data[hoverIdx] : null;
-
-      return (
-        <div className="flex items-center h-48 w-full gap-4">
-          <div className="w-32 h-32 relative">
-            <svg viewBox="0 0 42 42" className="w-full h-full transform -rotate-90" aria-hidden="true">
-              <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e5e7eb" strokeWidth="6"></circle>
-              {data.map((slice, i) => {
-                const percent = (slice.value / total) * 100;
-                if (percent === 0) return null;
-                const offset = 100 - cumulativePercent;
-                cumulativePercent += percent;
-                const isActive = hoverIdx === i;
-                return (
-                  <circle
-                    key={slice.label}
-                    cx="21" cy="21" r="15.91549430918954"
-                    fill="transparent"
-                    stroke={slice.color}
-                    strokeWidth={isActive ? "7.5" : "6"}
-                    strokeDasharray={`${percent} ${100 - percent}`}
-                    strokeDashoffset={offset}
-                    onMouseEnter={() => setHoverIdx(i)}
-                    onMouseLeave={() => setHoverIdx(null)}
-                    style={{ cursor: "pointer", transition: "stroke-width 150ms ease-out" }}
-                  />
-                );
-              })}
-            </svg>
-            {/* Número grande al hover, en el centro del donut */}
-            {hovered && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-2xl font-bold" style={{ color: hovered.color }}>{hovered.value}</span>
-                <span className="text-[9px] text-gray-500 uppercase tracking-wide">{hovered.label}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col gap-2 flex-1">
-            {data.map((d, i) => (
-              <div
-                key={d.label}
-                className={`flex items-center justify-between text-xs cursor-pointer rounded p-1 transition-colors ${hoverIdx === i ? "bg-gray-50" : ""}`}
-                onMouseEnter={() => setHoverIdx(i)}
-                onMouseLeave={() => setHoverIdx(null)}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></span>
-                  <span className="text-gray-600 truncate max-w-[100px]" title={d.label}>{d.label}</span>
-                </div>
-                <span className="font-semibold">{d.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    };
-
-    const CustomBarChart = ({ data }) => {
-      const max = Math.max(...data.map(d => d.value), 1);
-      if (data.length === 0) return <div className="h-48 flex items-center justify-center text-gray-400">Sin datos</div>;
-
-      return (
-        <div className="h-48 w-full mt-2 flex items-end justify-around gap-2">
-          {data.map((item, index) => (
-            <div key={index} className="flex-1 h-full flex flex-col items-center group min-w-0">
-              <div className="flex-1 w-full flex items-end justify-center">
-                <div
-                  className="w-full max-w-[40px] bg-[#1a8241] rounded-t transition-all duration-1000 ease-out relative hover:bg-green-600"
-                  style={{ height: `${(item.value / max) * 100}%`, minHeight: item.value > 0 ? '4px' : '0' }}
-                  aria-label={`${item.label}: ${item.value}`}
-                >
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
-                    {item.value} {item.value === 1 ? 'tarea' : 'tareas'}
-                  </div>
-                </div>
-              </div>
-              <span className="text-[10px] text-gray-500 mt-2 text-center w-full px-0.5 leading-tight whitespace-normal break-words" title={item.label}>
-                {item.label === "Dirección Administrativa y Financiera"
-                  ? "Dir. Adm. y Financiera"
-                  : item.label === "Dirección Jurídica"
-                    ? "Dir. Jurídica"
-                    : item.label === "Subgerencia Comercial"
-                      ? "Sub. Comercial"
-                      : item.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    };
-
-    // Convierte cualquier fecha a YYYY-MM-DD para <input type="date">.
-    function toInputDateValue(value) {
-      if (!value) return "";
-      const ddmm = formatDateDDMMYYYY(value);
-      const m = ddmm.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-      if (m) return `${m[3]}-${m[2]}-${m[1]}`;
-      return "";
-    }
-
-    // Normaliza estados antiguos al esquema de 2 estados.
-    function normalizeEstado(estado) {
-      if (estado === "Finalizado") return "Terminado";
-      if (estado === "Pendiente" || estado === "Retrasado") return "En Progreso";
-      if (estado === "Terminado" || estado === "En Progreso") return estado;
-      return "En Progreso"; // default seguro
-    }
-
-    // Convierte texto plano a JSX, transformando URLs http/https en enlaces clickeables.
-    function renderTextWithLinks(text) {
-      if (!text || typeof text !== "string") return text || "";
-      const urlRegex = /(https?:\/\/\S+)/g;
-      const parts = text.split(urlRegex);
-      return parts.map((part, i) => {
-        if (part && /^https?:\/\//.test(part)) {
-          return (
-            <a
-              key={i}
-              href={part}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="text-blue-600 underline hover:text-blue-800 break-all"
-            >
-              {part}
-            </a>
-          );
+    // Alinear datos 2024 al orden de comunas de 2025 (por código de comuna, col índice 1)
+    const comunaData24 = tc.map(r => {
+      const m = tc24.find(r24 => String(r24[1]) === String(r[1]));
+      return m ? m[5] : null;
+    });
+    chartInstances.push(new Chart(document.getElementById('chComuna'),{
+      type:'bar',
+      data:{labels:tc.map(r=>r[2]), datasets:[
+        {label:'2025', data:tc.map(r=>r[5]), backgroundColor:t.color, borderRadius:3, order:1},
+        {label:'2024', data:comunaData24, backgroundColor:C24, borderRadius:2, order:2}
+      ]},
+      options: comunaOpts
+    }));
+    const bins = isLowScale ? (
+      ['DESERCION','EXTRAEDAD'].includes(t.code)
+        ? [{label:'< 1%',  min:0,    max:0.01},
+           {label:'1-3%',  min:0.01, max:0.03},
+           {label:'3-5%',  min:0.03, max:0.05},
+           {label:'5-7%',  min:0.05, max:0.07},
+           {label:'≥ 7%',  min:0.07, max:1.01}]
+        : [{label:'< 3%',  min:0,    max:0.03},
+           {label:'3-6%',  min:0.03, max:0.06},
+           {label:'6-9%',  min:0.06, max:0.09},
+           {label:'9-12%', min:0.09, max:0.12},
+           {label:'≥ 12%', min:0.12, max:1.01}]
+    ) : [
+      {label:'< 80%',  min:0,    max:0.80},
+      {label:'80-85%', min:0.80, max:0.85},
+      {label:'85-90%', min:0.85, max:0.90},
+      {label:'90-95%', min:0.90, max:0.95},
+      {label:'≥ 95%',  min:0.95, max:1.01},
+    ];
+    const counts = bins.map(()=>0);
+    tes.forEach(r=>{
+      const v = r[3];
+      if(isNum(v)){
+        for(let b=0;b<bins.length;b++){
+          if(v>=bins[b].min && v<bins[b].max){ counts[b]++; break; }
         }
-        return <React.Fragment key={i}>{part}</React.Fragment>;
-      });
-    }
-    // Acepta: Date object, "YYYY-MM-DD", ISO string, "Tue Jan 13 2026 03:00:00 GMT-0500..." (Date.toString()), etc.
-    function formatDateDDMMYYYY(value) {
-      if (value === null || value === undefined || value === "") return "";
-
-      const fmt = (d) => {
-        const day = String(d.getDate()).padStart(2, "0");
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const year = d.getFullYear();
-        return `${day}/${month}/${year}`;
-      };
-
-      // 1) Date object directo
-      if (value instanceof Date && !isNaN(value.getTime())) return fmt(value);
-
-      const s = value.toString().trim();
-      if (!s) return "";
-
-      // 2) Match YYYY-MM-DD al inicio (cubre "2026-01-13" y "2026-01-13T..." ISO)
-      let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (m) return `${m[3]}/${m[2]}/${m[1]}`;
-
-      // 3) Ya en DD/MM/YYYY
-      m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      if (m) return `${m[1].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[3]}`;
-
-      // 4) Fallback: parseo nativo (cubre "Tue Jan 13 2026 03:00:00 GMT-0500...")
-      const parsed = new Date(s);
-      if (!isNaN(parsed.getTime())) return fmt(parsed);
-
-      return s;
-    }
-
-    // -------------------------------------------------------------------------
-    // Toast / Notificación
-    // -------------------------------------------------------------------------
-
-    const Toast = ({ message, type, onClose }) => {
-      useEffect(() => {
-        if (type === "success") {
-          const t = setTimeout(onClose, 3500);
-          return () => clearTimeout(t);
-        }
-      }, [type, onClose]);
-
-      const styles = type === "error"
-        ? "bg-red-50 border-red-200 text-red-800"
-        : type === "success"
-          ? "bg-green-50 border-green-200 text-green-800"
-          : "bg-blue-50 border-blue-200 text-blue-800";
-
-      const iconName = type === "error" ? "alert-circle" : type === "success" ? "check-circle" : "info";
-
-      return (
-        <div className={`fixed bottom-6 right-6 z-[60] max-w-sm border rounded-xl shadow-lg p-4 flex items-start gap-3 anim-slide-in-right ${styles}`} role="alert">
-          <i data-lucide={iconName} className="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-          <div className="flex-1 text-sm">{message}</div>
-          <button onClick={onClose} aria-label="Cerrar notificación" className="text-current opacity-60 hover:opacity-100 transition-opacity">
-            <i data-lucide="x" className="w-4 h-4"></i>
-          </button>
-        </div>
-      );
-    };
-
-    // -------------------------------------------------------------------------
-    // LoginScreen
-    // -------------------------------------------------------------------------
-
-    const LoginScreen = ({ onLogin, error, loading }) => {
-      const [role, setRole] = useState("");
-      const [password, setPassword] = useState("");
-
-      useEffect(() => {
-        if (typeof lucide !== "undefined") lucide.createIcons();
-      }, [error, loading]);
-
-      const onSubmit = (e) => {
-        e.preventDefault();
-        if (!role || !password) return;
-        onLogin(role, password);
-      };
-
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-[#f8f9fa] via-white to-[#e0f2e9] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8 w-full max-w-md anim-slide-up">
-            <div className="flex flex-col items-center mb-6">
-              <img src="logo.png" alt="ACTIVA" className="h-14 sm:h-16 mb-4" onError={e => e.target.style.display = "none"} />
-              <h1 className="text-xl sm:text-2xl font-bold text-[#1a8241] text-center">Seguimiento a Tareas</h1>
-              <p className="text-xs text-gray-500 mt-1 text-center">Empresa de Parques y Eventos de Antioquia</p>
-            </div>
-
-            <form onSubmit={onSubmit}>
-              <div className="mb-4">
-                <label htmlFor="login-role" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Rol</label>
-                <select
-                  id="login-role"
-                  required
-                  value={role}
-                  onChange={e => setRole(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all"
-                  autoFocus
-                >
-                  <option value="" disabled>Selecciona tu rol...</option>
-                  {ROLE_LIST.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-
-              <div className="mb-5">
-                <label htmlFor="login-password" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Contraseña</label>
-                <input
-                  id="login-password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all"
-                />
-              </div>
-
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-start gap-2" role="alert">
-                  <i data-lucide="alert-circle" className="w-4 h-4 mt-0.5 flex-shrink-0"></i>
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading || !role || !password}
-                className="w-full bg-[#1a8241] hover:bg-green-800 text-white py-2.5 rounded-lg font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <><i data-lucide="refresh-cw" className="w-4 h-4 animate-spin"></i> Verificando...</>
-                ) : (
-                  <><i data-lucide="log-in" className="w-4 h-4"></i> Ingresar</>
-                )}
-              </button>
-            </form>
-          </div>
-        </div>
-      );
-    };
-
-    // -------------------------------------------------------------------------
-    // App
-    // -------------------------------------------------------------------------
-
-    function App() {
-      const [tasks, setTasks] = useState(INITIAL_TASKS);
-      const [indicadoresList, setIndicadoresList] = useState([]);
-      const [selectedDept, setSelectedDept] = useState(() => {
-        // Si hay sesión guardada de un rol no-admin, arrancar filtrado por su depto
-        try {
-          const stored = sessionStorage.getItem("activa_user");
-          if (stored) {
-            const u = JSON.parse(stored);
-            if (u && u.role && u.role !== "Administrador") return u.role;
-          }
-        } catch (e) {}
-        return "Todas las Tareas";
-      });
-      const [isModalOpen, setIsModalOpen] = useState(false);
-      const [editingTask, setEditingTask] = useState(null);
-      const [isSyncing, setIsSyncing] = useState(false);
-      const [isLoadingInitial, setIsLoadingInitial] = useState(true);
-      const [columnFilters, setColumnFilters] = useState({});
-      const [modalAvance, setModalAvance] = useState(0);
-      const [toast, setToast] = useState(null); // {message, type}
-      const [sortConfig, setSortConfig] = useState({ key: "avance", direction: "asc" });
-      const [highlightedTaskId, setHighlightedTaskId] = useState(null);
-      const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-      const [isSidebarOpen, setIsSidebarOpen] = useState(true); // ESTADO PARA PANEL RETRÁCTIL
-
-      // --- Sesión / autenticación ---
-      const [currentUser, setCurrentUser] = useState(() => {
-        try {
-          const stored = sessionStorage.getItem("activa_user");
-          if (stored) return JSON.parse(stored);
-        } catch (e) {}
-        return null;
-      });
-      const [loginError, setLoginError] = useState(null);
-      const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-      const isAdmin = currentUser?.role === "Administrador";
-      // Edición restringida: no-admin editando una tarea existente solo puede tocar observaciones y avance
-      const isRestrictedEdit = !isAdmin && !!editingTask;
-
-      const [activeFilter, setActiveFilter] = useState(null);
-      const [filterSearch, setFilterSearch] = useState("");
-      const filterRef = useRef(null);
-      const modalRef = useRef(null);
-
-      const showToast = useCallback((message, type = "info") => {
-        setToast({ message, type, key: Date.now() });
-      }, []);
-
-      const handleLogin = useCallback(async (role, password) => {
-        setLoginError(null);
-        setIsLoggingIn(true);
-        try {
-          if (!GOOGLE_SHEETS_WEBAPP_URL) throw new Error("Backend no configurado");
-          const response = await fetch(GOOGLE_SHEETS_WEBAPP_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "login", user: role, password: password })
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const result = await response.json();
-          if (result.status === "error") throw new Error(result.message || "Credenciales inválidas");
-
-          const user = { role, password };
-          try { sessionStorage.setItem("activa_user", JSON.stringify(user)); } catch (e) {}
-          setCurrentUser(user);
-          // Para roles no-admin, fijar el filtro a su propio departamento
-          if (role !== "Administrador") setSelectedDept(role);
-          else setSelectedDept("Todas las Tareas");
-        } catch (e) {
-          setLoginError(e.message);
-        } finally {
-          setIsLoggingIn(false);
-        }
-      }, []);
-
-      const handleLogout = useCallback(() => {
-        try { sessionStorage.removeItem("activa_user"); } catch (e) {}
-        setCurrentUser(null);
-        setLoginError(null);
-        setSelectedDept("Todas las Tareas");
-      }, []);
-
-      const openModal = (task = null) => {
-        // Si la tarea trae estado legacy, lo normalizamos para que el dropdown lo seleccione
-        if (task && task.estado) {
-          task = { ...task, estado: normalizeEstado(task.estado) };
-        }
-        setEditingTask(task);
-        setModalAvance(task ? parseInt(task.avance, 10) || 0 : 0);
-        setIsModalOpen(true);
-      };
-
-      const closeModal = useCallback(() => {
-        setIsModalOpen(false);
-        setEditingTask(null);
-      }, []);
-
-      // Re-renderiza íconos solo cuando hay cambios estructurales del DOM,
-      // no en cada render del componente.
-      useEffect(() => {
-        if (typeof lucide !== "undefined") lucide.createIcons();
-      }, [tasks, selectedDept, isModalOpen, activeFilter, columnFilters, isSyncing, isLoadingInitial, toast, sortConfig, highlightedTaskId, isMobileMenuOpen, currentUser, isSidebarOpen]);
-
-      // ESC cierra el modal y los dropdowns de filtro
-      useEffect(() => {
-        const onKey = (e) => {
-          if (e.key === "Escape") {
-            if (isModalOpen) closeModal();
-            else if (activeFilter) setActiveFilter(null);
-            else if (isMobileMenuOpen) setIsMobileMenuOpen(false);
-          }
-        };
-        document.addEventListener("keydown", onKey);
-        return () => document.removeEventListener("keydown", onKey);
-      }, [isModalOpen, activeFilter, isMobileMenuOpen, closeModal]);
-
-      // Click fuera del filtro lo cierra
-      useEffect(() => {
-        const handleClickOutside = (event) => {
-          if (filterRef.current && !filterRef.current.contains(event.target)) {
-            setActiveFilter(null);
-          }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-      }, []);
-
-      // Scroll y highlight de tarea recién creada
-      useEffect(() => {
-        if (!highlightedTaskId) return;
-        // Esperamos al siguiente frame para asegurar que el row ya está en el DOM
-        const raf = requestAnimationFrame(() => {
-          const rowEl = document.querySelector(`tr[data-task-id="${highlightedTaskId}"]`);
-          if (rowEl) {
-            // 'nearest' evita scroll innecesario si la fila ya está visible
-            rowEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-          }
-        });
-        // Mantener highlight unos segundos y luego limpiar
-        const t = setTimeout(() => setHighlightedTaskId(null), 3500);
-        return () => {
-          cancelAnimationFrame(raf);
-          clearTimeout(t);
-        };
-      }, [highlightedTaskId]);
-
-      // Carga inicial con AbortController
-      useEffect(() => {
-        const controller = new AbortController();
-
-        const fetchFromGoogleSheets = async () => {
-          if (!GOOGLE_SHEETS_WEBAPP_URL) {
-            setIsLoadingInitial(false);
-            return;
-          }
-          setIsSyncing(true);
-          try {
-            const response = await fetch(GOOGLE_SHEETS_WEBAPP_URL, { signal: controller.signal });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            console.log("[ACTIVA] Backend versión recibida:", data.version || "(sin versión)");
-            if (data.status === "error") throw new Error(data.message || "Error del servidor");
-            if (Array.isArray(data.tasks)) setTasks(data.tasks);
-            if (Array.isArray(data.indicadores)) setIndicadoresList(data.indicadores);
-          } catch (error) {
-            if (error.name !== "AbortError") {
-              console.error("Error al cargar datos:", error);
-              showToast(`No se pudo cargar la base de datos: ${error.message}`, "error");
-            }
-          } finally {
-            setIsSyncing(false);
-            setIsLoadingInitial(false);
-          }
-        };
-        fetchFromGoogleSheets();
-        return () => controller.abort();
-      }, [showToast]);
-
-      // Filtrado de tareas
-      const filteredTasks = useMemo(() => {
-        let result = tasks;
-        if (selectedDept !== "Todas las Tareas" && selectedDept !== "Indicadores") {
-          result = result.filter(t => t.responsablePrincipal === selectedDept);
-        }
-        Object.keys(columnFilters).forEach(key => {
-          const selectedValues = columnFilters[key];
-          if (Array.isArray(selectedValues)) {
-            result = result.filter(t => {
-              const v = key === "estado" ? normalizeEstado(t[key]) : (t[key]?.toString() || "");
-              return selectedValues.includes(v);
-            });
-          }
-        });
-        // Ordenamiento por columna
-        if (sortConfig.key && sortConfig.direction) {
-          const numericKeys = new Set(["avance"]);
-          const dateKeys = new Set(["fechaInicio", "fechaFin"]);
-          const sorted = [...result].sort((a, b) => {
-            let va = a[sortConfig.key] ?? "";
-            let vb = b[sortConfig.key] ?? "";
-            if (sortConfig.key === "estado") {
-              va = normalizeEstado(va);
-              vb = normalizeEstado(vb);
-            }
-            let cmp;
-            if (numericKeys.has(sortConfig.key)) {
-              cmp = (parseInt(va, 10) || 0) - (parseInt(vb, 10) || 0);
-            } else if (dateKeys.has(sortConfig.key)) {
-              // Las fechas vienen YYYY-MM-DD: ordenamiento lexicográfico = cronológico
-              cmp = va.toString().localeCompare(vb.toString());
-            } else {
-              cmp = va.toString().localeCompare(vb.toString(), "es", { numeric: true });
-            }
-            return sortConfig.direction === "asc" ? cmp : -cmp;
-          });
-          result = sorted;
-        }
-        return result;
-      }, [tasks, selectedDept, columnFilters, sortConfig]);
-
-      // Estadísticas en un solo recorrido. Solo 2 estados nuevos: Terminado / En Progreso.
-      // Tareas con estados legacy se cuentan según su mapeo natural.
-      const taskStats = useMemo(() => {
-        const stats = { completed: 0, inProgress: 0, total: filteredTasks.length };
-        for (const t of filteredTasks) {
-          const avance = parseInt(t.avance, 10) || 0;
-          const isDone = t.estado === "Terminado" || t.estado === "Finalizado" || avance === 100;
-          if (isDone) stats.completed++;
-          else stats.inProgress++;
-        }
-        return stats;
-      }, [filteredTasks]);
-
-      // Mapa de valores únicos por columna (memoizado, una sola pasada)
-      const uniqueValuesByColumn = useMemo(() => {
-        const cols = ["responsablePrincipal", "responsableSecundario", "indicador",
-                      "compromiso", "fechaInicio", "fechaFin", "estado",
-                      "observaciones", "avance", "contexto"];
-        const map = {};
-        cols.forEach(c => { map[c] = new Set(); });
-        for (const t of tasks) {
-          cols.forEach(c => {
-            // El filtro de estado usa estados normalizados (Terminado / En Progreso)
-            const raw = c === "estado" ? normalizeEstado(t[c]) : (t[c] ?? "").toString();
-            map[c].add(raw);
-          });
-        }
-        const sorter = (a, b) => {
-          const na = Number(a), nb = Number(b);
-          if (!isNaN(na) && !isNaN(nb) && a !== "" && b !== "") return na - nb;
-          return a.localeCompare(b, "es");
-        };
-        const result = {};
-        cols.forEach(c => { result[c] = [...map[c]].sort(sorter); });
-        return result;
-      }, [tasks]);
-
-      const hasActiveFilters = Object.keys(columnFilters).length > 0;
-      const completionPercentage = taskStats.total === 0 ? 0 : Math.round((taskStats.completed / taskStats.total) * 100);
-
-      const statusData = useMemo(() => ([
-        { label: "Terminado", value: taskStats.completed, color: "#1a8241" },
-        { label: "En Progreso", value: taskStats.inProgress, color: "#3b82f6" }
-      ]), [taskStats]);
-
-      const areaData = useMemo(() => {
-        const counts = {};
-        DEPARTMENTS.slice(1, -1).forEach(d => counts[d] = 0);
-        filteredTasks.forEach(t => {
-          if (counts[t.responsablePrincipal] !== undefined) counts[t.responsablePrincipal]++;
-        });
-        return Object.keys(counts).map(k => ({ label: k, value: counts[k] }));
-      }, [filteredTasks]);
-
-      const renderIndicatorDashboard = () => {
-        const stats = {};
-        tasks.forEach(t => {
-          const ind = t.indicador && t.indicador.trim() !== "" ? t.indicador : "Sin Asignar";
-          if (!stats[ind]) stats[ind] = { totalAvance: 0, count: 0, completed: 0 };
-          stats[ind].totalAvance += (parseInt(t.avance, 10) || 0);
-          stats[ind].count += 1;
-          if (t.estado === "Finalizado" || parseInt(t.avance, 10) === 100) stats[ind].completed += 1;
-        });
-
-        const chartData = Object.keys(stats).map(k => ({
-          label: k,
-          value: Math.round(stats[k].totalAvance / stats[k].count),
-          count: stats[k].count,
-          completed: stats[k].completed
-        })).sort((a, b) => b.value - a.value);
-
-        return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-sm font-bold text-[#1a8241] flex items-center gap-2 mb-6">
-               <i data-lucide="target" className="w-5 h-5"></i> Cumplimiento Promedio por Indicador
-              </h3>
-              <div className="space-y-5">
-                {chartData.map((item, idx) => (
-                  <div key={idx}>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="font-semibold text-gray-700">{item.label}</span>
-                      <span className="font-bold text-[#1a8241] text-sm">{item.value}%</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-3">
-                      <div className="bg-[#1a8241] h-3 rounded-full transition-all duration-1000 relative overflow-hidden" style={{width: `${item.value}%`}}>
-                         <div className="absolute top-0 right-0 bottom-0 left-0 bg-white/20 w-full animate-pulse"></div>
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-gray-500 mt-1">{item.completed} de {item.count} tareas completadas al 100%</p>
-                  </div>
-                ))}
-                {chartData.length === 0 && <p className="text-xs text-gray-500">No hay indicadores registrados en las tareas.</p>}
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <h3 className="text-sm font-bold text-[#1a8241] flex items-center gap-2 mb-6">
-               <i data-lucide="bar-chart" className="w-5 h-5"></i> Tareas por Indicador
-              </h3>
-              <CustomBarChart data={chartData.map(d => ({label: d.label, value: d.count}))} />
-            </div>
-          </div>
-        );
-      };
-
-      // ---------------------------------------------------------------------
-      // Save / Delete con UI optimista + rollback ante fallo
-      // ---------------------------------------------------------------------
-
-      const handleSaveTask = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-
-        // En edición restringida, los campos deshabilitados no llegan al FormData,
-        // así que tomamos los valores existentes de la tarea para todo excepto
-        // observaciones y avance (los únicos editables por departamentos).
-        const newTask = isRestrictedEdit ? {
-          id: editingTask.id,
-          _isEdit: true,
-          responsablePrincipal: editingTask.responsablePrincipal || "",
-          responsableSecundario: editingTask.responsableSecundario || "",
-          compromiso: editingTask.compromiso || "",
-          fechaInicio: editingTask.fechaInicio || "",
-          fechaFin: editingTask.fechaFin || "",
-          estado: editingTask.estado || "En Progreso",
-          contexto: editingTask.contexto || "",
-          indicador: editingTask.indicador || "",
-          observaciones: formData.get("observaciones") || "",
-          avance: parseInt(formData.get("avance") || "0", 10)
-        } : {
-          id: editingTask ? editingTask.id : generateTaskId(),
-          _isEdit: !!editingTask,
-          responsablePrincipal: formData.get("responsablePrincipal") || "",
-          responsableSecundario: formData.get("responsableSecundario") || "", // AHORA ES TEXTO
-          compromiso: (formData.get("compromiso") || "").trim(),
-          fechaInicio: formData.get("fechaInicio") || "",
-          fechaFin: formData.get("fechaFin") || "",
-          estado: formData.get("estado") || "En Progreso",
-          observaciones: formData.get("observaciones") || "",
-          avance: parseInt(formData.get("avance") || "0", 10),
-          contexto: formData.get("contexto") || "",
-          indicador: formData.get("indicador") || ""
-        };
-
-        // Validación cliente (solo aplica a admin / creación)
-        if (!isRestrictedEdit && !newTask.compromiso) {
-          showToast("El compromiso es obligatorio", "error");
-          return;
-        }
-
-        // Snapshot para posible rollback
-        const previousTasks = tasks;
-        const wasEditing = !!editingTask;
-        const newTasks = wasEditing
-          ? tasks.map(t => t.id === editingTask.id ? newTask : t)
-          : [...tasks, newTask];
-
-        setTasks(newTasks);
-        setIsModalOpen(false);
-        setEditingTask(null);
-        setIsSyncing(true);
-
-        // Marcamos la tarea para scroll + highlight, ya sea creación o edición
-        setHighlightedTaskId(newTask.id);
-
-        if (!GOOGLE_SHEETS_WEBAPP_URL) {
-          setIsSyncing(false);
-          showToast("Configuración faltante: URL del backend", "error");
-          return;
-        }
-
-        try {
-          const requestPayload = {
-            action: "save",
-            task: newTask,
-            user: currentUser?.role,
-            password: currentUser?.password,
-            _t: Date.now()
-          };
-          console.log("[ACTIVA] POST → save", { user: currentUser?.role, taskId: newTask.id, isEdit: newTask._isEdit, avance: newTask.avance });
-          const response = await fetch(GOOGLE_SHEETS_WEBAPP_URL, {
-            method: "POST",
-            cache: "no-store",
-            redirect: "follow",
-            body: JSON.stringify(requestPayload)
-          });
-
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const result = await response.json();
-          // Log detallado para diagnóstico
-          console.log("[ACTIVA] Respuesta del backend al guardar:", result);
-          if (result.status === "error") {
-            throw new Error(result.message || "Error desconocido del servidor");
-          }
-          if (result.status !== "success") {
-            throw new Error("Respuesta inesperada del servidor: " + JSON.stringify(result));
-          }
-
-          showToast(wasEditing ? "Tarea actualizada" : "Tarea creada", "success");
-        } catch (error) {
-          console.error("Error al guardar:", error);
-          // Rollback
-          setTasks(previousTasks);
-          setHighlightedTaskId(null);
-
-          // Si es un problema de autenticación, forzamos logout
-          const isAuthError = /credenciales|contraseña|usuario inválido/i.test(error.message);
-          if (isAuthError) {
-            handleLogout();
-            showToast("Sesión expirada. Vuelve a iniciar sesión.", "error");
-          } else {
-            // Reabrir el modal con la tarea para que el usuario no pierda el trabajo
-            setEditingTask(newTask);
-            setModalAvance(newTask.avance);
-            setIsModalOpen(true);
-            showToast(`No se pudo guardar: ${error.message}. Tu trabajo no se perdió.`, "error");
-          }
-        } finally {
-          setIsSyncing(false);
-        }
-      };
-
-      const handleDelete = async (id) => {
-        if (!window.confirm("¿Estás seguro de eliminar esta tarea?")) return;
-
-        const previousTasks = tasks;
-        setTasks(tasks.filter(t => t.id !== id));
-        setIsSyncing(true);
-
-        if (!GOOGLE_SHEETS_WEBAPP_URL) {
-          setIsSyncing(false);
-          return;
-        }
-
-        try {
-          console.log("[ACTIVA] POST → delete", { user: currentUser?.role, taskId: id });
-          const response = await fetch(GOOGLE_SHEETS_WEBAPP_URL, {
-            method: "POST",
-            cache: "no-store",
-            redirect: "follow",
-            body: JSON.stringify({
-              action: "delete",
-              id: id,
-              user: currentUser?.role,
-              password: currentUser?.password,
-              _t: Date.now()
-            })
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const result = await response.json();
-          console.log("[ACTIVA] Respuesta del backend al eliminar:", result);
-          if (result.status === "error") throw new Error(result.message || "Error del servidor");
-
-          showToast("Tarea eliminada", "success");
-        } catch (error) {
-          console.error("Error al eliminar:", error);
-          setTasks(previousTasks); // rollback
-
-          const isAuthError = /credenciales|contraseña|usuario inválido/i.test(error.message);
-          if (isAuthError) {
-            handleLogout();
-            showToast("Sesión expirada. Vuelve a iniciar sesión.", "error");
-          } else {
-            showToast(`No se pudo eliminar: ${error.message}`, "error");
-          }
-        } finally {
-          setIsSyncing(false);
-        }
-      };
-
-      // ---------------------------------------------------------------------
-      // Header con filtro estilo Excel
-      // ---------------------------------------------------------------------
-
-      const handleSort = (columnKey) => {
-        setSortConfig(prev => {
-          if (prev.key !== columnKey) return { key: columnKey, direction: "asc" };
-          if (prev.direction === "asc") return { key: columnKey, direction: "desc" };
-          return { key: null, direction: null }; // tercer click: limpia
-        });
-      };
-
-      const renderHeader = (columnKey, title, extraClasses = "") => {
-        const uniqueValues = uniqueValuesByColumn[columnKey] || [];
-
-        const isFilterActive = columnFilters[columnKey] !== undefined;
-        const currentSelected = columnFilters[columnKey] || uniqueValues;
-        const filteredOptions = uniqueValues.filter(val => val.toLowerCase().includes(filterSearch.toLowerCase()));
-
-        const handleToggleValue = (val) => {
-           let newSelected;
-           if (currentSelected.includes(val)) {
-             newSelected = currentSelected.filter(v => v !== val);
-           } else {
-             newSelected = [...currentSelected, val];
-           }
-
-           if (newSelected.length === uniqueValues.length) {
-              const newFilters = {...columnFilters};
-              delete newFilters[columnKey];
-              setColumnFilters(newFilters);
-           } else {
-              setColumnFilters({...columnFilters, [columnKey]: newSelected});
-           }
-        };
-
-        const handleSelectAll = () => {
-           const newFilters = {...columnFilters};
-           delete newFilters[columnKey];
-           setColumnFilters(newFilters);
-        };
-
-        const handleClearAll = () => {
-           setColumnFilters({...columnFilters, [columnKey]: []});
-        };
-
-        const dropdownId = `filter-dropdown-${columnKey}`;
-        const isSorted = sortConfig.key === columnKey;
-        const sortIcon = isSorted ? (sortConfig.direction === "asc" ? "arrow-up" : "arrow-down") : "arrow-up-down";
-
-        return (
-          <th key={columnKey}
-              className={`p-3 border-r border-green-600/50 relative select-none ${extraClasses}`}
-              ref={activeFilter === columnKey ? filterRef : null}
-              scope="col">
-             <div className="flex justify-between items-center gap-2">
-                <button
-                  type="button"
-                  className="flex items-center gap-1 group focus:outline-none focus:ring-2 focus:ring-yellow-300 rounded uppercase"
-                  onClick={() => handleSort(columnKey)}
-                  aria-label={`Ordenar por ${title}`}
-                  title="Click para ordenar"
-                >
-                  <span>{title}</span>
-                  <i data-lucide={sortIcon} className={`w-3 h-3 transition-opacity ${isSorted ? "opacity-100 text-yellow-300" : "opacity-40 group-hover:opacity-80"}`}></i>
-                </button>
-                <button
-                  type="button"
-                  className="focus:outline-none focus:ring-2 focus:ring-yellow-300 rounded p-0.5 group/f"
-                  onClick={() => {
-                    if (activeFilter === columnKey) setActiveFilter(null);
-                    else { setActiveFilter(columnKey); setFilterSearch(""); }
-                  }}
-                  aria-haspopup="true"
-                  aria-expanded={activeFilter === columnKey}
-                  aria-controls={dropdownId}
-                  aria-label={`Filtrar columna ${title}`}
-                  title="Filtrar"
-                >
-                  <i data-lucide="filter" className={`w-3.5 h-3.5 transition-colors ${isFilterActive ? "text-yellow-300 opacity-100" : "opacity-40 group-hover/f:opacity-80"}`}></i>
-                </button>
-             </div>
-
-             {activeFilter === columnKey && (
-                <div
-                  id={dropdownId}
-                  className="absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-lg w-56 z-50 text-gray-800 font-normal cursor-default"
-                  onClick={e => e.stopPropagation()}
-                  role="dialog"
-                  aria-label={`Filtrar columna ${title}`}
-                >
-                   <div className="p-2 border-b border-gray-100">
-                      <input
-                        type="text"
-                        placeholder="Buscar..."
-                        className="w-full border border-gray-300 p-1.5 text-xs rounded-md focus:outline-none focus:ring-1 focus:ring-[#1a8241]"
-                        value={filterSearch}
-                        onChange={e => setFilterSearch(e.target.value)}
-                        aria-label="Buscar valor en filtro"
-                      />
-                   </div>
-                   <div className="p-2 border-b border-gray-100 flex justify-between text-xs text-[#1a8241]">
-                      <button onClick={handleSelectAll} className="hover:underline font-medium">Seleccionar todo</button>
-                      <button onClick={handleClearAll} className="hover:underline font-medium text-gray-500">Ninguno</button>
-                   </div>
-                   <div className="max-h-48 overflow-y-auto p-2 space-y-1">
-                      {filteredOptions.length === 0 ? (
-                         <div className="text-xs text-gray-400 text-center py-2">Sin resultados</div>
-                      ) : (
-                         filteredOptions.map(val => (
-                           <label key={val} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-gray-50 p-1.5 rounded-md">
-                              <input
-                                type="checkbox"
-                                checked={currentSelected.includes(val)}
-                                onChange={() => handleToggleValue(val)}
-                                className="accent-[#1a8241] w-3.5 h-3.5 rounded-sm"
-                              />
-                              <span className="truncate">{val || "(Vacío)"}</span>
-                           </label>
-                         ))
-                      )}
-                   </div>
-                   <div className="p-2 border-t border-gray-100 bg-gray-50 flex justify-end rounded-b-lg">
-                      <button onClick={() => setActiveFilter(null)} className="text-xs bg-[#1a8241] hover:bg-green-800 text-white px-4 py-1.5 rounded-md shadow-sm transition-colors font-medium">Cerrar</button>
-                   </div>
-                </div>
-             )}
-          </th>
-        );
-      };
-
-      // ---------------------------------------------------------------------
-      // Render principal
-      // ---------------------------------------------------------------------
-
-      // Si el usuario no ha iniciado sesión, mostramos solo la pantalla de login.
-      if (!currentUser) {
-        return <LoginScreen onLogin={handleLogin} error={loginError} loading={isLoggingIn} />;
       }
+    });
+    chartInstances.push(new Chart(document.getElementById('chDist'),{
+      type:'bar',
+      data:{labels:bins.map(b=>b.label), datasets:[{
+        label:'Establecimientos', data:counts,
+        backgroundColor:[COL_LO,'#e67e22',COL_MID,'#52a96b',COL_HI], borderRadius:6
+      }]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} establecimientos`}}},
+        scales:{
+          x:{ticks:{font:{family:'Inter'}, color:'#3a4a6b'}, grid:{color:'#eef2f7'}},
+          y:{beginAtZero:true, ticks:{font:{family:'Inter'}, color:'#3a4a6b', precision:0}, grid:{color:'#eef2f7'}}
+        }
+      }
+    }));
 
-      return (
-        <div className="min-h-screen bg-[#f8f9fa] font-sans text-gray-800 flex flex-col">
+    // Rankings
+    const sorted = [...tes].filter(r=>isNum(r[3])).sort((a,b)=>b[3]-a[3]);
+    const top = sorted.slice(0,10);
+    const bot = [...sorted].reverse().slice(0,10);
+    const topHtml = top.map((r,i)=>`<li><span class="rank-name"><span class="rank-badge">${i+1}</span>${esc(r[2])}</span><span class="rank-val">${fmtPct(r[3])}</span></li>`).join('');
+    const botHtml = bot.map((r,i)=>`<li><span class="rank-name"><span class="rank-badge">${i+1}</span>${esc(r[2])}</span><span class="rank-val">${fmtPct(r[3])}</span></li>`).join('');
+    document.getElementById('topList').innerHTML = topHtml;
+    document.getElementById('botList').innerHTML = botHtml;
+  }
+}
 
-          <header className="bg-[#e0e1dd] py-3 px-4 sm:px-6 flex justify-between items-center border-b border-gray-200 shadow-sm z-20 gap-2">
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-              {/* --- BOTÓN DE HAMBURGUESA PARA CONTROLAR EL SIDEBAR EN ESCRITORIO --- */}
-              <button
-                className="hidden md:flex p-2 -ml-2 text-[#1a8241] hover:bg-black/5 rounded-lg transition-colors flex-shrink-0"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                aria-label="Alternar menú lateral"
-              >
-                <i data-lucide="menu" className="w-6 h-6"></i>
-              </button>
-              {/* Botón original para móviles */}
-              <button
-                className="md:hidden p-2 -ml-1 text-[#1a8241] hover:bg-black/5 rounded-lg transition-colors flex-shrink-0"
-                onClick={() => setIsMobileMenuOpen(true)}
-                aria-label="Abrir menú de departamentos"
-              >
-                <i data-lucide="menu" className="w-6 h-6"></i>
-              </button>
-              
-              <img
-                src="logo.png"
-                alt="Logo ACTIVA"
-                className="h-8 sm:h-10 w-auto flex-shrink-0"
-                onError={(e) => e.target.style.display = "none"}
-              />
-              <h1 className="text-base sm:text-xl md:text-2xl font-bold text-[#1a8241] truncate leading-tight">
-                <span className="hidden sm:inline">Seguimiento a Tareas - Empresa de Parques y Eventos de Antioquia ACTIVA</span>
-                <span className="sm:hidden">Seguimiento - ACTIVA</span>
-              </h1>
-            </div>
+function hexToRgba(hex, a){
+  const m = hex.replace('#','').match(/.{2}/g).map(h=>parseInt(h,16));
+  return `rgba(${m[0]},${m[1]},${m[2]},${a})`;
+}
 
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <div className="hidden md:flex flex-col items-end leading-tight">
-                <span className="text-[10px] text-gray-500 uppercase tracking-wide">Conectado como</span>
-                <span className="text-sm font-bold text-[#1a8241] truncate max-w-[260px]" title={currentUser.role}>{currentUser.role}</span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-gray-600 hover:bg-black/10 hover:text-[#1a8241] rounded-lg transition-colors flex items-center gap-1.5"
-                title={`Cerrar sesión (${currentUser.role})`}
-                aria-label="Cerrar sesión"
-              >
-                <i data-lucide="log-out" className="w-5 h-5"></i>
-                <span className="hidden lg:inline text-sm font-medium">Salir</span>
-              </button>
-            </div>
-          </header>
+/* =========================================================
+   RENDER HOJA (tabla)
+   ========================================================= */
+// Los índices de pct/num son 1-based sobre el arreglo completo de la fila,
+// donde la columna 1 es TASA (no se muestra en la vista web pero sí en el Excel descargado).
+const HOJA_META = {
+  RESUMEN:                { headers:['Indicador','Valor'], pct:[3], num:[], nombre:'Resumen' },
+  TASA_GRADO:             { headers:['Grado','Femenino (mat.)','Masculino (mat.)','Total matrícula','Tasa'], pct:[6], num:[3,4,5], nombre:'Tasa por grado' },
+  TASA_EDAD:              { headers:['Edad','Femenino (mat.)','Masculino (mat.)','Total matrícula','Tasa'], pct:[6], num:[2,3,4,5], nombre:'Tasa por edad' },
+  TASA_COMUNA:            { headers:['Código','Comuna','Femenino','Masculino','Total'], pct:[4,5,6], num:[2], nombre:'Tasa por comuna' },
+  TASAS_ESTABLECIMIENTO:  { headers:['Código DANE','Nombre del establecimiento','Tasa'], pct:[4], num:[], nombre:'Tasas por establecimiento' },
+  TASAS_ESTAB_GRADO:      { headers:['Código DANE','Nombre','Grado 0','Grado 1','Grado 2','Grado 3','Grado 4','Grado 5','Grado 6','Grado 7','Grado 8','Grado 9','Grado 10','Grado 11','Grado 99','Total'], pct:Array.from({length:14},(_,i)=>i+4), num:[], nombre:'Tasas × grado' },
+};
 
-          <div className="flex flex-1 overflow-hidden relative">
+function renderSheet(t, key){
+  const meta = HOJA_META[key];
+  const data = getTasaData(t.code, key);
+  const main = document.getElementById('main');
 
-            {isLoadingInitial && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center" role="status" aria-live="polite">
-                <i data-lucide="refresh-cw" className="w-10 h-10 text-[#1a8241] animate-spin mb-4"></i>
-                <p className="text-gray-600 font-semibold">Cargando base de datos...</p>
-              </div>
-            )}
+  // Caso especial: Cobertura Neta no tiene desagregación válida por establecimiento.
+  // En vez de mostrar tabla/gráfico, mostrar la explicación correspondiente.
+  if(t.code === 'COBERTURA_NETA' && (key === 'TASAS_ESTABLECIMIENTO' || key === 'TASAS_ESTAB_GRADO')){
+    const txt = getAnalisisCorto(key, t.code);
+    const fallback = `La Tasa de Cobertura Neta no se calcula a nivel de establecimiento educativo, ya que su denominador es la población en edad escolar del territorio (fuente DANE) y no la matrícula de cada institución. Por esta razón esta vista no aplica para Cobertura Neta.`;
+    main.innerHTML = pageHead({
+      title: `${meta.nombre}`,
+      subtitle: `${t.nombre} · Comparativo 2024–2025`,
+      breadcrumb: `<a onclick="goHome()">Inicio</a> › ${esc(t.nombre)} › ${esc(meta.nombre)}`,
+      actions: ''
+    }) + `
+      <div class="analisis-panel">
+        <h3><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Esta vista no aplica para Cobertura Neta</h3>
+        <div class="analisis-text">${esc(txt && txt.trim() ? txt : fallback)}</div>
+      </div>`;
+    return;
+  }
 
-            {/* Sidebar Lateral en Escritorio - Controlado por isSidebarOpen */}
-            {isSidebarOpen && (
-              <aside className="w-64 bg-white hidden md:flex flex-col border-r border-gray-200 shadow-sm z-10 transition-all duration-300" aria-label="Departamentos">
-                <ul className="space-y-1 py-4 flex-1 overflow-y-auto">
-                  {DEPARTMENTS.map(dept => (
-                    <li
-                      key={dept}
-                      onClick={() => setSelectedDept(dept)}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedDept(dept); } }}
-                      tabIndex={0}
-                      role="button"
-                      aria-pressed={selectedDept === dept}
-                      className={`px-6 py-3 cursor-pointer transition-colors text-sm font-medium border-l-4 focus:outline-none focus:ring-2 focus:ring-[#1a8241] focus:ring-inset ${
-                        selectedDept === dept
-                        ? "border-[#1a8241] text-[#1a8241] bg-green-50"
-                        : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                      }`}
-                    >
-                      {dept}
-                    </li>
-                  ))}
-                </ul>
-              </aside>
-            )}
+  const isLarge = data.length > 30;
+  const searchId = 'sch_' + Math.random().toString(36).slice(2,8);
 
-            {/* Drawer móvil: solo se muestra en pantallas <md */}
-            {isMobileMenuOpen && (
-              <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Menú de departamentos">
-                <div
-                  className="absolute inset-0 bg-black/50 anim-fade"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                ></div>
-                <aside className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] bg-white shadow-2xl flex flex-col anim-slide-in-left">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-[#e0e1dd]">
-                    <span className="text-sm font-bold text-[#1a8241]">Departamentos</span>
-                    <button
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      aria-label="Cerrar menú"
-                      className="p-1 text-gray-500 hover:text-gray-800 hover:bg-black/5 rounded"
-                    >
-                      <i data-lucide="x" className="w-5 h-5"></i>
-                    </button>
-                  </div>
-                  <ul className="space-y-1 py-3 flex-1 overflow-y-auto">
-                    {DEPARTMENTS.map(dept => (
-                      <li
-                        key={dept}
-                        onClick={() => { setSelectedDept(dept); setIsMobileMenuOpen(false); }}
-                        className={`px-5 py-3 cursor-pointer transition-colors text-sm font-medium border-l-4 ${
-                          selectedDept === dept
-                          ? "border-[#1a8241] text-[#1a8241] bg-green-50"
-                          : "border-transparent text-gray-600 hover:bg-gray-50"
-                        }`}
-                      >
-                        {dept}
-                      </li>
-                    ))}
-                  </ul>
-                </aside>
-              </div>
-            )}
+  main.innerHTML = pageHead({
+    title: `${meta.nombre}`,
+    subtitle: `${t.nombre} · ${data.length} registros`,
+    breadcrumb: `<a onclick="goHome()">Inicio</a> › ${esc(t.nombre)} › ${esc(meta.nombre)}`,
+    actions: downloadBtn(`onclick="downloadVista('${t.code}','${key}')"`, `Descargar a Excel`)
+  }) + `
+    <div class="card">
+      ${isLarge ? `
+      <div class="table-tools">
+        <input id="${searchId}" class="search-input" type="text" placeholder="Buscar en la tabla…" />
+        <span class="count-chip" id="${searchId}_c">${data.length} filas</span>
+      </div>`:''}
+      <div class="table-wrap" id="tableHost"></div>
+    </div>
+    ${key === 'RESUMEN' ? renderAnalisisPanel(t.code) : ''}
+  `;
 
-            <main className="flex-1 p-3 sm:p-6 overflow-y-auto transition-all duration-300">
+  const host = document.getElementById('tableHost');
+  const pctSet = new Set(meta.pct);
+  const numSet = new Set(meta.num);
 
-              {selectedDept !== "Indicadores" && (
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-wrap justify-between items-center mb-6 gap-6">
-                  <div className="flex gap-4">
-                    <button className="p-2 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors" aria-label="Filtros">
-                      <i data-lucide="filter" className="w-5 h-5"></i>
-                    </button>
-                    <button className="p-2 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-lg text-gray-600 transition-colors" aria-label="Abrir externo">
-                      <i data-lucide="external-link" className="w-5 h-5"></i>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-8 lg:gap-16">
-                    <GaugeChart value={taskStats.completed} total={taskStats.total} />
-                    <div className="flex flex-col items-center">
-                      <span className="text-[#84cc16] text-5xl font-bold">{completionPercentage} %</span>
-                      <span className="text-[#0c4a6e] font-semibold mt-1">% de terminación</span>
-                    </div>
-                  </div>
-
-                  <div className="w-40 h-40 rounded-full border-4 border-gray-50 overflow-hidden shadow-md hidden lg:block bg-gray-100">
-                    <img
-                      src={PROFILE_IMAGES[selectedDept] || PROFILE_IMAGES["Todas las Tareas"]}
-                      alt={`Imagen de ${selectedDept}`}
-                      className="w-full h-full object-cover object-top"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2YxZjVmOSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Gb3RvPC90ZXh0Pjwvc3ZnPg==";
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedDept === "Indicadores" ? (
-                renderIndicatorDashboard()
-              ) : (
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
-                  <div className="xl:col-span-4 grid grid-cols-3 gap-4">
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i data-lucide="clipboard-list" className="w-6 h-6"></i></div>
-                      <div className="text-center"><p className="text-gray-500 text-xs font-semibold uppercase">Total</p><p className="text-2xl font-bold text-gray-800">{taskStats.total}</p></div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 rounded-lg bg-green-50 text-[#1a8241] flex items-center justify-center"><i data-lucide="check-circle" className="w-6 h-6"></i></div>
-                      <div className="text-center"><p className="text-gray-500 text-xs font-semibold uppercase">Terminadas</p><p className="text-2xl font-bold text-gray-800">{taskStats.completed}</p></div>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center gap-2 hover:shadow-md transition-shadow">
-                      <div className="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><i data-lucide="clock" className="w-6 h-6"></i></div>
-                      <div className="text-center"><p className="text-gray-500 text-xs font-semibold uppercase">En Progreso</p><p className="text-2xl font-bold text-gray-800">{taskStats.inProgress}</p></div>
-                    </div>
-                  </div>
-
-                  <div className="xl:col-span-4 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-4">
-                      <i data-lucide="pie-chart" className="w-4 h-4 text-[#1a8241]"></i> Distribución por Estado
-                    </h3>
-                    <DoughnutChart data={statusData} />
-                  </div>
-
-                  <div className="xl:col-span-4 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                     <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-4">
-                      <i data-lucide="bar-chart-2" className="w-4 h-4 text-[#1a8241]"></i> Tareas por Responsable
-                    </h3>
-                    <CustomBarChart data={areaData} />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-lg font-bold text-[#1a8241]">
-                    Listado de Tareas {selectedDept !== "Todas las Tareas" && `- ${selectedDept}`}
-                  </h2>
-                  {hasActiveFilters && (
-                    <button
-                      onClick={() => setColumnFilters({})}
-                      className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-semibold transition-colors"
-                    >
-                      <i data-lucide="x" className="w-3 h-3"></i> Limpiar filtros
-                    </button>
-                  )}
-                </div>
-                <div className="flex gap-3 items-center">
-                  {isSyncing && (
-                    <span className="text-xs text-gray-500 flex items-center gap-1 mr-2 bg-gray-100 px-2 py-1 rounded-md" aria-live="polite">
-                      <i data-lucide="refresh-cw" className="w-3 h-3 animate-spin"></i> Guardando...
-                    </span>
-                  )}
-                  <button onClick={() => openModal(null)} className="flex items-center gap-2 bg-[#1a8241] hover:bg-green-800 text-white px-4 py-2 rounded-lg shadow-sm transition-colors text-sm font-medium">
-                    <i data-lucide="plus" className="w-4 h-4"></i> Añadir Tarea
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden pb-32">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left border-collapse">
-                    <thead className="bg-[#1a8241] text-white">
-                      <tr>
-                        {renderHeader("responsablePrincipal", "RESP. PRINCIPAL")}
-                        {renderHeader("responsableSecundario", "RESP. SECUNDARIO")}
-                        {renderHeader("indicador", "INDICADOR")}
-                        {renderHeader("compromiso", "COMPROMISO/DECISIONES", "min-w-[250px] max-w-[300px]")}
-                        {renderHeader("fechaInicio", "F. INICIO", "w-[90px] min-w-[90px]")}
-                        {renderHeader("fechaFin", "F. FIN", "w-[90px] min-w-[90px]")}
-                        {renderHeader("estado", "ESTADO")}
-                        {renderHeader("observaciones", "OBSERVACIONES", "min-w-[150px] max-w-[200px]")}
-                        {renderHeader("avance", "% AVANCE", "text-center")}
-                        {renderHeader("contexto", "CONTEXTO", "min-w-[200px] max-w-[250px]")}
-                        <th className="p-3 text-center" scope="col">ACCIONES</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredTasks.length === 0 ? (
-                        <tr><td colSpan="11" className="text-center p-8 text-gray-500 bg-gray-50">No hay tareas que coincidan con los filtros.</td></tr>
-                      ) : (
-                        filteredTasks.map((task, index) => {
-                          const avanceNum = Math.min(Math.max(parseInt(task.avance, 10) || 0, 0), 100);
-
-                          return (
-                            <tr
-                              key={task.id}
-                              data-task-id={task.id}
-                              className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-green-50 transition-colors border-b border-gray-100 last:border-0 ${highlightedTaskId === task.id ? "!bg-yellow-100 ring-2 ring-yellow-400 ring-inset" : ""}`}
-                            >
-                              <td className="p-3 text-gray-700">{task.responsablePrincipal}</td>
-                              <td className="p-3 text-gray-700">{task.responsableSecundario}</td>
-                              <td className="p-3 font-semibold text-[#1a8241]">{task.indicador || "-"}</td>
-                              <td className="p-3 font-medium text-gray-800 max-w-[300px] break-words whitespace-normal">{task.compromiso}</td>
-                              <td className="p-3 text-gray-600 whitespace-nowrap text-xs">{formatDateDDMMYYYY(task.fechaInicio)}</td>
-                              <td className="p-3 text-gray-600 whitespace-nowrap text-xs">{formatDateDDMMYYYY(task.fechaFin)}</td>
-                              <td className="p-3 text-center">
-                                 {(() => {
-                                   const est = normalizeEstado(task.estado);
-                                   return (
-                                     <span className={`px-2 py-1 rounded-md text-xs font-bold whitespace-nowrap ${
-                                       est === "Terminado" ? "bg-green-100 text-green-700" : "bg-blue-100 text-blue-700"
-                                     }`}>
-                                       {est}
-                                     </span>
-                                   );
-                                 })()}
-                              </td>
-                              <td className="p-3 text-gray-600 text-xs max-w-[200px] break-words whitespace-normal">{renderTextWithLinks(task.observaciones)}</td>
-                              <td className="p-3 min-w-[100px]">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-full bg-gray-200 rounded-full h-2" role="progressbar" aria-valuenow={avanceNum} aria-valuemin="0" aria-valuemax="100">
-                                    <div className="bg-[#1a8241] h-2 rounded-full" style={{width: `${avanceNum}%`}}></div>
-                                  </div>
-                                  <span className="text-xs font-bold text-gray-700 w-8">{avanceNum}%</span>
-                                </div>
-                              </td>
-                              <td className="p-3 text-gray-600 text-xs max-w-[250px] break-words whitespace-normal">{task.contexto}</td>
-                              <td className="p-3 text-center space-x-1 whitespace-nowrap">
-                                {userCanModifyTask(currentUser, task) ? (
-                                  <>
-                                    <button onClick={() => openModal(task)} aria-label={`Editar tarea: ${task.compromiso}`} title="Editar" className="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition-colors"><i data-lucide="edit-2" className="w-4 h-4"></i></button>
-                                    {isAdmin && (
-                                      <button onClick={() => handleDelete(task.id)} aria-label={`Eliminar tarea: ${task.compromiso}`} title="Eliminar" className="text-red-500 hover:bg-red-50 p-1.5 rounded transition-colors"><i data-lucide="trash-2" className="w-4 h-4"></i></button>
-                                    )}
-                                  </>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 italic px-1.5" title="Solo puede modificar el responsable principal o un administrador">
-                                    <i data-lucide="lock" className="w-3 h-3"></i>
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-            </main>
-          </div>
-
-          {/* MODAL DE EDICIÓN */}
-          {isModalOpen && (
-            <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 anim-fade"
-              onClick={closeModal}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="modal-title"
-            >
-              <div
-                ref={modalRef}
-                className="bg-white border border-gray-200 rounded-t-[18px] sm:rounded-[18px] p-5 sm:p-8 w-full max-w-[560px] max-h-[92vh] overflow-y-auto shadow-2xl anim-slide-up"
-                onClick={e => e.stopPropagation()}
-              >
-
-                <h2 id="modal-title" className="text-2xl sm:text-3xl font-serif mb-1 text-gray-900">
-                  {editingTask ? <>Editar <em className="text-[#1a8241] italic">actividad</em></> : <>Nueva <em className="text-[#1a8241] italic">actividad</em></>}
-                </h2>
-                <p className="text-[13px] text-gray-500 mb-6">Completa los detalles. Puedes editarlos en cualquier momento.</p>
-
-                {isRestrictedEdit && (
-                  <div className="mb-5 p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-lg flex items-start gap-2">
-                    <i data-lucide="info" className="w-4 h-4 mt-0.5 flex-shrink-0"></i>
-                    <span>Tu rol solo puede actualizar <strong>Observaciones</strong> y <strong>% Avance</strong>. Los demás campos los gestiona el administrador.</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleSaveTask}>
-
-                  <div className="mb-4">
-                    <label htmlFor="form-compromiso" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Compromiso / Decisiones *</label>
-                    <input id="form-compromiso" name="compromiso" required disabled={isRestrictedEdit} defaultValue={editingTask?.compromiso || ""} autoFocus={!isRestrictedEdit} placeholder="Ej. Realizar mejoras al formato..." className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
-                  </div>
-
-                  <div className="mb-4">
-                    {/* QUITAR REQUIRED DE CONTEXTO Y DEL LABEL */}
-                    <label htmlFor="form-contexto" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Contexto</label>
-                    <textarea id="form-contexto" name="contexto" disabled={isRestrictedEdit} defaultValue={editingTask?.contexto || ""} placeholder="Detalles, contexto, entregables..." className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all min-h-[80px] resize-y disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                      <label htmlFor="form-resp-principal" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Resp. Principal *</label>
-                      {isAdmin ? (
-                        <select id="form-resp-principal" name="responsablePrincipal" required defaultValue={editingTask?.responsablePrincipal || DEPARTMENTS[1]} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all">
-                          {DEPARTMENTS.slice(1, -1).map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
-                      ) : (
-                        <>
-                          <input type="hidden" name="responsablePrincipal" value={currentUser.role} />
-                          <div id="form-resp-principal" className="w-full px-3.5 py-2.5 bg-gray-100 border border-gray-200 rounded-lg text-[14px] text-gray-600 flex items-center gap-2" title="Solo el administrador puede cambiar este campo">
-                            <i data-lucide="lock" className="w-3.5 h-3.5 flex-shrink-0"></i>
-                            <span className="truncate">{currentUser.role}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <div>
-                      {/* RESPONSABLE SECUNDARIO COMO INPUT TEXT LIBRE */}
-                      <label htmlFor="form-resp-secundario" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Resp. Secundario</label>
-                      <input id="form-resp-secundario" name="responsableSecundario" disabled={isRestrictedEdit} defaultValue={editingTask?.responsableSecundario || ""} placeholder="Nombre o Área..." className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label htmlFor="form-indicador" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Indicador Estratégico *</label>
-                    <select id="form-indicador" name="indicador" required disabled={isRestrictedEdit} defaultValue={editingTask?.indicador || ""} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed">
-                        <option value="" disabled>Seleccione un indicador de la lista...</option>
-                        {indicadoresList.map((ind, i) => (
-                          <option key={i} value={ind}>{ind}</option>
-                        ))}
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                      <label htmlFor="form-fecha-inicio" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Fecha Inicio *</label>
-                      <input id="form-fecha-inicio" type="date" name="fechaInicio" required disabled={isRestrictedEdit} defaultValue={toInputDateValue(editingTask?.fechaInicio || "")} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
-                    </div>
-                    <div>
-                      <label htmlFor="form-fecha-fin" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Fecha Límite *</label>
-                      <input id="form-fecha-fin" type="date" name="fechaFin" required disabled={isRestrictedEdit} defaultValue={toInputDateValue(editingTask?.fechaFin || "")} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                      <label htmlFor="form-estado" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Estado *</label>
-                      <select id="form-estado" name="estado" required disabled={isRestrictedEdit} defaultValue={normalizeEstado(editingTask?.estado || "En Progreso")} className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed">
-                        <option value="En Progreso">En Progreso</option>
-                        <option value="Terminado">Terminado</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label htmlFor="form-avance" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Avance · {modalAvance}%</label>
-                      <div className="flex items-center gap-3 pt-2">
-                        <input id="form-avance" type="range" name="avance" min="0" max="100" step="5" value={modalAvance} onChange={e => setModalAvance(e.target.value)} className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1a8241]" />
-                        <span className="font-mono text-[13px] min-w-[35px] text-right text-gray-800">{modalAvance}%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <label htmlFor="form-observaciones" className="block text-[11px] uppercase tracking-[0.1em] text-gray-500 mb-1.5 font-medium">Observaciones</label>
-                    <input id="form-observaciones" name="observaciones" defaultValue={editingTask?.observaciones || ""} placeholder="Agrega tus observaciones..." className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-[14px] text-gray-800 focus:outline-none focus:border-[#1a8241] focus:ring-1 focus:ring-[#1a8241] transition-all" />
-                  </div>
-
-                  <div className="flex justify-end gap-2 mt-6">
-                    <button type="button" onClick={closeModal} className="px-4 py-2.5 rounded-lg text-[13px] font-medium text-gray-600 border border-gray-200 bg-transparent hover:border-[#1a8241] hover:text-[#1a8241] transition-all flex items-center gap-2">
-                      <i data-lucide="x" className="w-4 h-4"></i> Cancelar
-                    </button>
-                    <button type="submit" disabled={isSyncing} className="px-4 py-2.5 rounded-lg text-[13px] font-medium bg-[#1a8241] text-white hover:bg-green-700 hover:-translate-y-[1px] transition-all flex items-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
-                      <i data-lucide={isSyncing ? "refresh-cw" : "check"} className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`}></i> {editingTask ? "Guardar" : "Crear"}
-                    </button>
-                  </div>
-
-                </form>
-              </div>
-            </div>
-          )}
-
-          {toast && (
-            <Toast
-              key={toast.key}
-              message={toast.message}
-              type={toast.type}
-              onClose={() => setToast(null)}
-            />
-          )}
-
-        </div>
-      );
+  let html = `<table class="data"><thead><tr>`;
+  meta.headers.forEach((h,i) => {
+    const colIdx = i+1; // en data, col 0 es TASA; los encabezados empiezan en col 1
+    const cls = numSet.has(colIdx+1) || pctSet.has(colIdx+1) ? 'num' : '';
+    html += `<th class="${cls}">${esc(h)}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+  // Limitar a las columnas definidas en HOJA_META para ignorar G/H (análisis)
+  const maxCol = meta.headers.length + 1;
+  for(const r of data){
+    html += `<tr>`;
+    for(let c=1; c<maxCol && c<r.length; c++){
+      const v = r[c];
+      const isPct = pctSet.has(c+1);
+      const isNumCol = numSet.has(c+1) || isPct;
+      let cls = isNumCol ? 'num' : '';
+      let shown;
+      if(isPct && isNum(v)){
+        shown = fmtPct(v);
+        cls += ' pct-cell ' + rateClass(v);
+      } else if(isNumCol && isNum(v)){
+        shown = fmtNum(v);
+      } else {
+        shown = esc(v==null?'':v);
+      }
+      html += `<td class="${cls.trim()}">${shown}</td>`;
     }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  host.innerHTML = html;
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App />);
-  </script>
+  if(isLarge){
+    const inp = document.getElementById(searchId);
+    const cnt = document.getElementById(searchId+'_c');
+    inp.addEventListener('input', ()=>{
+      const q = inp.value.trim().toLowerCase();
+      const trs = host.querySelectorAll('tbody tr');
+      let shown = 0;
+      trs.forEach(tr=>{
+        const m = !q || tr.textContent.toLowerCase().includes(q);
+        tr.style.display = m ? '' : 'none';
+        if(m) shown++;
+      });
+      cnt.textContent = `${shown} filas`;
+    });
+  }
+}
+
+/* =========================================================
+   DESCARGA A EXCEL CON FORMATO (ExcelJS)
+   ========================================================= */
+const STYLE = {
+  NAVY:  'FF0B3B7A',
+  NAVY2: 'FF1552B3',
+  WHITE: 'FFFFFFFF',
+  ACCENT:'FFF4B400',
+  ROW_ALT:'FFFBFCFE',
+  HEADER_BG:'FF0B3B7A',
+  THIN: {color:{argb:'FFE4E9F2'}, style:'thin'},
+};
+
+function applyBorder(cell){
+  cell.border = {top:STYLE.THIN, left:STYLE.THIN, right:STYLE.THIN, bottom:STYLE.THIN};
+}
+function styleHeaderRow(row){
+  row.height = 28;
+  row.eachCell({includeEmpty:true}, cell=>{
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:STYLE.HEADER_BG}};
+    cell.font = {name:'Calibri', size:11, bold:true, color:{argb:STYLE.WHITE}};
+    cell.alignment = {horizontal:'center', vertical:'middle', wrapText:true};
+    applyBorder(cell);
+  });
+}
+function styleTitleRow(row, span, text){
+  row.getCell(1).value = text;
+  row.getCell(1).font = {name:'Calibri', size:16, bold:true, color:{argb:STYLE.NAVY}};
+  row.getCell(1).alignment = {horizontal:'left', vertical:'middle'};
+  row.height = 28;
+}
+function styleSubtitleRow(row, span, text){
+  row.getCell(1).value = text;
+  row.getCell(1).font = {name:'Calibri', size:10, italic:true, color:{argb:'FF7686A1'}};
+  row.getCell(1).alignment = {horizontal:'left', vertical:'middle'};
+  row.height = 16;
+}
+function styleDataCell(cell, rowIdx, col, isPct, isNumCol){
+  cell.font = {name:'Calibri', size:10};
+  applyBorder(cell);
+  if(rowIdx % 2 === 0){
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:STYLE.ROW_ALT}};
+  }
+  if(isPct){
+    cell.numFmt = '0.00%';
+    cell.alignment = {horizontal:'right', vertical:'middle'};
+  } else if(isNumCol){
+    cell.numFmt = '#,##0';
+    cell.alignment = {horizontal:'right', vertical:'middle'};
+  } else {
+    cell.alignment = {vertical:'middle'};
+  }
+}
+
+/* Escribe una tabla con formato en una hoja ExcelJS a partir de un rowStart */
+function writeFormattedSheet(ws, {title, subtitle, headers, rows, pctCols, numCols, colWidths}){
+  pctCols = pctCols || [];
+  numCols = numCols || [];
+  const span = headers.length;
+
+  // Anchos de columna
+  ws.columns = colWidths.map(w=>({width:w}));
+
+  // Título
+  ws.mergeCells(1,1,1,span);
+  styleTitleRow(ws.getRow(1), span, title);
+  // Subtítulo
+  ws.mergeCells(2,1,2,span);
+  styleSubtitleRow(ws.getRow(2), span, subtitle);
+  // Fila decorativa
+  ws.getRow(3).height = 6;
+
+  // Encabezados en fila 4
+  const headerRow = ws.getRow(4);
+  headers.forEach((h,i)=>headerRow.getCell(i+1).value = h);
+  styleHeaderRow(headerRow);
+
+  // Datos desde fila 5
+  const pctSet = new Set(pctCols);
+  const numSet = new Set(numCols);
+  rows.forEach((r, ri) => {
+    const row = ws.getRow(5 + ri);
+    r.forEach((v, ci) => {
+      const cell = row.getCell(ci+1);
+      cell.value = v;
+      const col1based = ci+1;
+      styleDataCell(cell, ri, col1based, pctSet.has(col1based), numSet.has(col1based));
+    });
+    row.commit?.();
+  });
+
+  // Congelar filas superiores (título, subtítulo, decorativa, encabezado)
+  ws.views = [{state:'frozen', ySplit:4}];
+}
+
+async function downloadVista(tasaCode, hoja){
+  const t = TASA_BY_CODE[tasaCode];
+  const meta = HOJA_META[hoja];
+  const data = getTasaData(tasaCode, hoja);
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Dashboard Tasas Educativas · Medellín';
+  wb.created = new Date();
+  const ws = wb.addWorksheet(meta.nombre.substring(0,31));
+  ws.views = [{showGridLines:false, state:'frozen', ySplit:4}];
+
+  // Cabeceras sin la col TASA (la quitamos de la vista), pero para el archivo descargado
+  // SÍ la incluimos para que sea trazable.
+  const fullHeaders = ['TASA', ...meta.headers];
+  // El pct/num en HOJA_META está en 1-based contando TASA incluida.
+  const widths = getDefaultWidths(hoja);
+
+  writeFormattedSheet(ws, {
+    title: `${meta.nombre} · ${t.nombre}`,
+    subtitle: `Tasas Educativas · Medellín · Comparativo 2024–2025 — Generado ${new Date().toLocaleString('es-CO')}`,
+    headers: fullHeaders,
+    rows: data,
+    pctCols: meta.pct,
+    numCols: meta.num,
+    colWidths: widths
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${t.nombre.replace(/ /g,'_')}_${meta.nombre.replace(/ /g,'_')}.xlsx`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+}
+
+function getDefaultWidths(hoja){
+  switch(hoja){
+    case 'RESUMEN':               return [18, 32, 14];
+    case 'TASA_GRADO':            return [18, 22, 20, 20, 18, 14];
+    case 'TASA_EDAD':             return [18, 14, 20, 20, 18, 14];
+    case 'TASA_COMUNA':           return [18, 10, 28, 14, 14, 14];
+    case 'TASAS_ESTABLECIMIENTO': return [18, 16, 60, 12];
+    case 'TASAS_ESTAB_GRADO':     return [18, 16, 42, ...Array(13).fill(10), 12];
+    default: return Array(10).fill(16);
+  }
+}
+
+/* Descarga por tasa completa: todas las hojas para una tasa */
+async function downloadTasaFull(tasaCode){
+  const t = TASA_BY_CODE[tasaCode];
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Dashboard Tasas Educativas · Medellín';
+  wb.created = new Date();
+
+  const order = ['RESUMEN','TASA_GRADO','TASA_EDAD','TASA_COMUNA','TASAS_ESTABLECIMIENTO','TASAS_ESTAB_GRADO'];
+  for(const hoja of order){
+    const meta = HOJA_META[hoja];
+    const data = getTasaData(tasaCode, hoja);
+    const ws = wb.addWorksheet(meta.nombre.substring(0,31));
+    ws.views = [{showGridLines:false, state:'frozen', ySplit:4}];
+    writeFormattedSheet(ws, {
+      title: `${meta.nombre} · ${t.nombre}`,
+      subtitle: `Tasas Educativas · Medellín · Comparativo 2024–2025 — Generado ${new Date().toLocaleString('es-CO')}`,
+      headers: ['TASA', ...meta.headers],
+      rows: data,
+      pctCols: meta.pct,
+      numCols: meta.num,
+      colWidths: getDefaultWidths(hoja)
+    });
+  }
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `${t.nombre.replace(/ /g,'_')}_Completo.xlsx`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+}
+
+/* =========================================================
+   DESCARGA DE INFORME EJECUTIVO EN WORD (.docx)
+   ========================================================= */
+async function downloadInformeWord(tasaCode){
+  if(!window.docx){ alert('La librería de Word aún se está cargando. Intenta de nuevo en unos segundos.'); return; }
+  const t = TASAS.find(x=>x.code===tasaCode);
+  if(!t) return;
+  const periodo = (ANIO_BY_CODE[currentAnio]||{}).sub||'';
+  const helpers = _buildInformeHelpers(window.docx, t);
+  const captures = _captureDashboardCharts(t);
+  const children = [..._informeCover(helpers, t, periodo), ..._buildInformeSection(helpers, t, captures)];
+  await _packAndDownloadInforme(helpers, children, `Informe_${t.nombre.replace(/\s+/g,'_')}_${periodo.replace(/\s+/g,'_')}.docx`, `Informe ${t.nombre} · ${periodo}`);
+}
+
+async function downloadInformeCompleto(){
+  if(!window.docx){ alert('La librería de Word aún se está cargando. Intenta de nuevo en unos segundos.'); return; }
+  if(!currentAnio){ alert('Selecciona un periodo primero.'); return; }
+  const periodo = (ANIO_BY_CODE[currentAnio]||{}).sub||'';
+  const toast = document.getElementById('loadingToast');
+  if(toast){ toast.style.display=''; const msg=toast.querySelector('.lt-text'); if(msg) msg.textContent='Generando informe completo…'; }
+  const saved = { tasa: currentTasa, vista: currentVista };
+  try {
+    const D = window.docx;
+    const helpers = _buildInformeHelpers(D, {color:'#0b3b7a', nombre:'Completo'});
+    const { Paragraph, TextRun, AlignmentType, PageBreak } = D;
+    const fechaGen = new Date().toLocaleDateString('es-CO', {year:'numeric', month:'long', day:'numeric'});
+    const cover = [
+      new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:400, after:120},
+        children:[new TextRun({text:"Tasas Educativas", color:"0b3b7a", bold:true, size:60, font:"Calibri"})]}),
+      new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:200},
+        children:[new TextRun({text:`${periodo} · Medellín`, color:"6b7280", size:26, italics:true, font:"Calibri"})]}),
+      new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:200},
+        children:[new TextRun({text:"Distrito de Ciencia, Tecnología e Innovación", color:"6b7280", size:20, font:"Calibri"})]}),
+      new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:600},
+        children:[new TextRun({text:`Generado el ${fechaGen}`, color:"9ca3af", size:18, italics:true, font:"Calibri"})]})
+    ];
+    const allChildren = [...cover];
+    let isFirst = true;
+    // Desactivar animaciones de Chart.js para que el canvas quede listo de inmediato
+    Chart.defaults.animation = false;
+    try{
+      for(const t of TASAS){
+        if(!hasData(t.code)) continue;
+        currentTasa = t.code;
+        currentVista = 'dashboard';
+        renderVista();
+        await new Promise(r => setTimeout(r, 100));
+        const tasaHelpers = _buildInformeHelpers(D, t);
+        const captures = _captureDashboardCharts(t);
+        if(!isFirst){
+          allChildren.push(new Paragraph({children:[new PageBreak()]}));
+        }
+        isFirst = false;
+        allChildren.push(...(_informeTasaHeader(tasaHelpers, t)), ..._buildInformeSection(tasaHelpers, t, captures));
+      }
+    } finally {
+      Chart.defaults.animation = undefined; // restaurar animaciones
+    }
+    currentTasa = saved.tasa;
+    currentVista = saved.vista;
+    if(currentTasa) renderVista(); else renderHome();
+    await _packAndDownloadInforme(helpers, allChildren, `Informe_Completo_${periodo.replace(/\s+/g,'_')}.docx`, `Informe completo · ${periodo}`);
+  } finally {
+    if(toast){ toast.style.display='none'; const msg=toast.querySelector('.lt-text'); if(msg) msg.textContent=''; }
+  }
+}
+
+function _buildInformeHelpers(D, t){
+  const { Paragraph, TextRun, ImageRun, Table, TableRow, TableCell,
+          AlignmentType, WidthType, ShadingType, BorderStyle, Packer, Document } = D;
+  const PRIMARY = "0b3b7a";
+  const ACCENT  = (t.color||"#0b3b7a").replace("#","");
+  const GRAY    = "6b7280";
+  const DARK    = "1a2c4d";
+  const LIGHT   = "f6f8fb";
+  const H1 = (text) => new Paragraph({
+    spacing:{before:400, after:160},
+    border:{bottom:{color:PRIMARY, space:6, style:BorderStyle.SINGLE, size:8}},
+    children:[new TextRun({text, bold:true, color:PRIMARY, size:32, font:"Calibri"})]
+  });
+  const P = (text, opts={}) => new Paragraph({
+    spacing:{after:140, line:320},
+    alignment: opts.center ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
+    children:[new TextRun({
+      text: text||'(Sin información)',
+      color: opts.color||DARK, size:22, font:"Calibri",
+      italics: !!opts.italics
+    })]
+  });
+  const SUBT = (text) => new Paragraph({
+    spacing:{after:160},
+    children:[new TextRun({text, color:GRAY, size:20, font:"Calibri", italics:true})]
+  });
+  const IMG = (cap) => {
+    if(!cap) return P("(Gráfica no disponible)", {italics:true, color:GRAY, center:true});
+    const W = 600;
+    const H = Math.round(W * (cap.h / cap.w));
+    return new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing:{before:80, after:200},
+      children:[new ImageRun({data:cap.bytes, transformation:{width:W, height:H}})]
+    });
+  };
+  const cell = (text, opts={}) => new TableCell({
+    shading: opts.fill ? {fill:opts.fill, type:ShadingType.CLEAR, color:"auto"} : undefined,
+    margins:{top:80, bottom:80, left:120, right:120},
+    children:[new Paragraph({
+      alignment: opts.align||AlignmentType.LEFT,
+      children:[new TextRun({
+        text:String(text??''), bold:!!opts.bold,
+        color: opts.color||DARK, size: opts.size||20, font:"Calibri"
+      })]
+    })]
+  });
+  return { D, Document, Packer, Paragraph, TextRun, Table, TableRow, AlignmentType, WidthType, PRIMARY, ACCENT, GRAY, DARK, LIGHT, H1, P, SUBT, IMG, cell };
+}
+
+function _captureDashboardCharts(t){
+  const isCN = t.code === 'COBERTURA_NETA';
+  const dataURLToBytes = (dataURL) => {
+    const b64 = dataURL.split(',')[1];
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+    return arr;
+  };
+  const cap = (id) => {
+    const c = document.getElementById(id);
+    if(!c || !c.width || !c.height) return null;
+    const tmp = document.createElement('canvas');
+    tmp.width = c.width; tmp.height = c.height;
+    const ctx = tmp.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tmp.width, tmp.height);
+    ctx.drawImage(c, 0, 0);
+    return { bytes: dataURLToBytes(tmp.toDataURL('image/png')), w: tmp.width, h: tmp.height };
+  };
+  return {
+    chNivel: cap('chNivel'),
+    chGrado: cap('chGrado'),
+    chEdad:  isCN ? null : cap('chEdad'),
+    chComuna:isCN ? null : cap('chComuna'),
+    chDist:  isCN ? null : cap('chDist')
+  };
+}
+
+function _informeCover(h, t, periodo){
+  const { Paragraph, TextRun, AlignmentType, PRIMARY, GRAY } = h;
+  const fechaGen = new Date().toLocaleDateString('es-CO', {year:'numeric', month:'long', day:'numeric'});
+  return [
+    new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:200, after:80},
+      children:[new TextRun({text:t.nombre, color:PRIMARY, bold:true, size:56, font:"Calibri"})]}),
+    new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:160},
+      children:[new TextRun({text:`${periodo} · Medellín`, color:GRAY, size:24, italics:true, font:"Calibri"})]}),
+    new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:200},
+      children:[new TextRun({text:"Distrito de Ciencia, Tecnología e Innovación", color:GRAY, size:18, font:"Calibri"})]}),
+    new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:480},
+      children:[new TextRun({text:`Generado el ${fechaGen}`, color:"9ca3af", size:18, italics:true, font:"Calibri"})]})
+  ];
+}
+
+function _informeTasaHeader(h, t){
+  const { Paragraph, TextRun, AlignmentType, PRIMARY, ACCENT } = h;
+  return [
+    new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:200, after:60},
+      children:[new TextRun({text:t.nombre.toUpperCase(), color:ACCENT, bold:true, size:48, font:"Calibri"})]}),
+    new Paragraph({alignment:AlignmentType.CENTER, spacing:{after:280},
+      children:[new TextRun({text:t.descripcion||'', color:"6b7280", size:20, italics:true, font:"Calibri"})]})
+  ];
+}
+
+function _buildInformeSection(h, t, captures){
+  const { H1, P, SUBT, IMG, cell, Table, TableRow, WidthType, PRIMARY, LIGHT, AlignmentType } = h;
+  const isCN = t.code === 'COBERTURA_NETA';
+  const resumen = getTasaData(t.code, 'RESUMEN');
+  const kpiTable = new Table({
+    width:{size:100, type:WidthType.PERCENTAGE},
+    rows:[
+      new TableRow({tableHeader:true, children:[
+        cell("Nivel",{fill:PRIMARY, color:"FFFFFF", bold:true, size:22}),
+        cell("Valor",{fill:PRIMARY, color:"FFFFFF", bold:true, size:22, align:AlignmentType.RIGHT})
+      ]}),
+      ...resumen.map((r,i)=>{
+        const isTot = String(r[1]).toLowerCase().includes('total');
+        const fill = isTot ? "e8eef8" : (i%2===0 ? "ffffff" : LIGHT);
+        return new TableRow({children:[
+          cell(r[1], {fill, bold:isTot, size:22}),
+          cell(fmtPct(r[2]), {fill, bold:isTot, size:22, align:AlignmentType.RIGHT})
+        ]});
+      })
+    ]
+  });
+  const tes = getTasaData(t.code, 'TASAS_ESTABLECIMIENTO');
+  const sorted = [...tes].filter(r=>isNum(r[3])).sort((a,b)=>b[3]-a[3]);
+  const top = sorted.slice(0,10);
+  const bot = [...sorted].reverse().slice(0,10);
+  const rankTable = (rows, headerColor) => new Table({
+    width:{size:100, type:WidthType.PERCENTAGE},
+    rows:[
+      new TableRow({tableHeader:true, children:[
+        cell("#",{fill:headerColor, color:"FFFFFF", bold:true, size:20, align:AlignmentType.CENTER}),
+        cell("Establecimiento",{fill:headerColor, color:"FFFFFF", bold:true, size:20}),
+        cell("Tasa",{fill:headerColor, color:"FFFFFF", bold:true, size:20, align:AlignmentType.RIGHT})
+      ]}),
+      ...rows.map((r,i)=>{
+        const fill = i%2===0 ? "ffffff" : LIGHT;
+        return new TableRow({children:[
+          cell(i+1, {fill, size:20, align:AlignmentType.CENTER}),
+          cell(r[2]||'', {fill, size:20}),
+          cell(fmtPct(r[3]), {fill, bold:true, size:20, align:AlignmentType.RIGHT})
+        ]});
+      })
+    ]
+  });
+  const _txtP = (txt) => txt ? [P(txt)] : [];
+  const children = [
+    H1("Indicadores generales"),
+    SUBT(`Tasa de ${t.nombre.toLowerCase()} por nivel educativo`),
+    kpiTable,
+    ...(_txtP(getAnalisisTasa(t.code)).length ? [H1("Análisis"), ..._txtP(getAnalisisTasa(t.code))] : []),
+    H1("Tasa por nivel educativo"),
+    IMG(captures.chNivel),
+    ..._txtP(getAnalisisCorto('RESUMEN', t.code)),
+    H1("Tasa por grado"),
+    IMG(captures.chGrado),
+    ..._txtP(getAnalisisCorto('TASA_GRADO', t.code))
+  ];
+  if(!isCN){
+    children.push(
+      H1("Tasa por edad"),
+      IMG(captures.chEdad),
+      ..._txtP(getAnalisisCorto('TASA_EDAD', t.code)),
+      H1("Tasa por comuna"),
+      IMG(captures.chComuna),
+      ..._txtP(getAnalisisCorto('TASA_COMUNA', t.code)),
+      H1("Distribución de establecimientos"),
+      SUBT("Cantidad de establecimientos por rango de tasa"),
+      IMG(captures.chDist),
+      H1("Top 10 establecimientos"),
+      SUBT("Tasas más altas"),
+      rankTable(top, "1f9254"),
+      H1("Bottom 10 establecimientos"),
+      SUBT("Tasas más bajas"),
+      rankTable(bot, "c0392b"),
+      ..._txtP(getAnalisisCorto('TASAS_ESTABLECIMIENTO', t.code)).length
+        ? [H1("Análisis por establecimiento"), ..._txtP(getAnalisisCorto('TASAS_ESTABLECIMIENTO', t.code))]
+        : []
+    );
+  }
+  return children;
+}
+
+async function _packAndDownloadInforme(h, children, filename, title){
+  const { Document, Packer } = h;
+  const doc = new Document({
+    creator:"Tasas Educativas · Medellín",
+    title,
+    styles:{ default:{ document:{ run:{ font:"Calibri", size:22 } } } },
+    sections:[{
+      properties:{ page:{ margin:{top:1080, right:1080, bottom:1080, left:1080} } },
+      children
+    }]
+  });
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+}
+
+/* Descarga completa: libro con 6 hojas (todas las tasas) + ÍNDICE */
+async function downloadAll(){
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Dashboard Tasas Educativas · Medellín';
+  wb.created = new Date();
+
+  // ÍNDICE
+  const idx = wb.addWorksheet('ÍNDICE');
+  idx.views = [{showGridLines:false}];
+  idx.columns = [{width:22},{width:26},{width:26},{width:28}];
+  idx.mergeCells('A1:D1');
+  idx.getCell('A1').value = `Tasas Educativas · Medellín · Comparativo 2024–2025`;
+  idx.getCell('A1').font = {name:'Calibri', size:18, bold:true, color:{argb:STYLE.NAVY}};
+  idx.getCell('A1').alignment = {horizontal:'left', vertical:'middle'};
+  idx.getRow(1).height = 30;
+
+  idx.mergeCells('A2:D2');
+  idx.getCell('A2').value = `Libro completo — Generado ${new Date().toLocaleString('es-CO')}`;
+  idx.getCell('A2').font = {name:'Calibri', size:10, italic:true, color:{argb:'FF7686A1'}};
+
+  // Tabla de tasas
+  const hRow = idx.getRow(4);
+  ['Código de tasa','Nombre','Estado','Tasa total'].forEach((h,i)=>hRow.getCell(i+1).value = h);
+  styleHeaderRow(hRow);
+
+  TASAS.forEach((t, i) => {
+    const row = idx.getRow(5 + i);
+    const ready = hasData(t.code);
+    const resumen = getTasaData(t.code, 'RESUMEN');
+    const total = resumen.find(r => String(r[1]).toLowerCase().includes('total'));
+    const valTot = ready && total ? total[2] : null;
+
+    row.getCell(1).value = t.code;
+    row.getCell(2).value = t.nombre;
+    row.getCell(3).value = ready ? 'Datos cargados' : 'Pendiente de llenar';
+    row.getCell(4).value = valTot;
+
+    [1,2,3,4].forEach(c=>{
+      const cell = row.getCell(c);
+      cell.font = {name:'Calibri', size:10};
+      applyBorder(cell);
+      if(i % 2 === 1){
+        cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:STYLE.ROW_ALT}};
+      }
+      cell.alignment = {vertical:'middle'};
+    });
+    // Tasa total con formato
+    row.getCell(4).numFmt = '0.00%';
+    row.getCell(4).alignment = {horizontal:'right', vertical:'middle'};
+    // Estado coloreado
+    const st = row.getCell(3);
+    if(ready){
+      st.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFD4EDDA'}};
+      st.font = {name:'Calibri', size:10, bold:true, color:{argb:'FF1F9254'}};
+    } else {
+      st.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF3CD'}};
+      st.font = {name:'Calibri', size:10, bold:true, color:{argb:'FF856404'}};
+    }
+  });
+
+  // Una hoja por dimensión, con las 5 tasas mezcladas
+  const order = ['RESUMEN','TASA_GRADO','TASA_EDAD','TASA_COMUNA','TASAS_ESTABLECIMIENTO','TASAS_ESTAB_GRADO'];
+  for(const hoja of order){
+    const meta = HOJA_META[hoja];
+    const ws = wb.addWorksheet(meta.nombre.substring(0,31));
+    ws.views = [{showGridLines:false, state:'frozen', ySplit:4}];
+    // Combinar datos de todas las tasas
+    const allRows = (DATOS[hoja] || []);
+    writeFormattedSheet(ws, {
+      title: `${meta.nombre} · Todas las tasas`,
+      subtitle: `Tasas Educativas · Medellín · Comparativo 2024–2025 — Generado ${new Date().toLocaleString('es-CO')}`,
+      headers: ['TASA', ...meta.headers],
+      rows: allRows,
+      pctCols: meta.pct,
+      numCols: meta.num,
+      colWidths: getDefaultWidths(hoja)
+    });
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `Tasas_Educativas_Medellin_${currentAnio||'2024'}.xlsx`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+}
+document.getElementById('btnDownloadAll').addEventListener('click', downloadAll);
+document.getElementById('btnDownloadInformeAll').addEventListener('click', downloadInformeCompleto);
+
+/* =========================================================
+   CARGA DE DATOS DESDE APPS SCRIPT (si la URL está puesta)
+   ========================================================= */
+function _setDownloadButtonsVisible(visible){
+  const ids = ['btnDownloadAll','btnDownloadInformeAll'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = visible ? '' : 'none';
+  });
+}
+
+async function _fetchAnio(sheetId, destObj){
+  const url = APPS_SCRIPT_URL + '?id=' + encodeURIComponent(sheetId);
+  const res = await fetch(url, {method:'GET', redirect:'follow'});
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  if(json && json.error) throw new Error(json.error);
+  const keys = ['RESUMEN','TASA_GRADO','TASA_EDAD','TASA_COMUNA','TASAS_ESTABLECIMIENTO','TASAS_ESTAB_GRADO'];
+  keys.forEach(k=>{ if(Array.isArray(json[k])) destObj[k] = json[k]; });
+  return json._meta || null;
+}
+
+async function cargarDatosRemotos(){
+  if(!APPS_SCRIPT_URL || !APPS_SCRIPT_URL.trim()) return false;
+  const toast = document.getElementById('loadingToast');
+  if(toast) toast.style.display = 'flex';
+  FUENTE_DATOS = 'loading';
+  _setDownloadButtonsVisible(false);
+  try{
+    // Cargar ambos años en paralelo
+    const [meta25] = await Promise.all([
+      _fetchAnio(SHEET_ID_2025, DATOS_2025),
+      _fetchAnio(SHEET_ID_2024, DATOS_2024).catch(()=>null) // 2024 es opcional
+    ]);
+    META_REMOTA = meta25;
+    FUENTE_DATOS = 'remote';
+    return true;
+  }catch(err){
+    console.warn('No se pudo cargar desde Apps Script:', err);
+    FUENTE_DATOS = 'error';
+    return false;
+  }finally{
+    if(toast) toast.style.display = 'none';
+    _setDownloadButtonsVisible(true);
+  }
+}
+
+function renderEstadoConexion(){
+  // Chip de estado deshabilitado por solicitud del usuario
+  return;
+}
+
+/* =========================================================
+   INICIO
+   ========================================================= */
+(async function init(){
+  renderHome(); // render inmediato (sin datos todavía)
+  const ok = await cargarDatosRemotos();
+  if(ok){
+    if(currentTasa) renderVista(); else renderHome();
+  }
+})();
+</script>
 </body>
 </html>
